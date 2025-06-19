@@ -40,7 +40,7 @@ export default function GeneratePage() {
         setError(err.message);
         setLoading(false);
       });
-  }, [topic, apiKey, questions, router]);
+  }, [topic, apiKey, questions, files, router]);
 
   if (!topic || !apiKey) return null;
 

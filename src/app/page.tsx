@@ -86,7 +86,7 @@ export default function Home() {
                     Drag and drop your file here or click to select a file.
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Supported formats: PDF, DOCX, TXT
+                    Supported formats: PDF, DOCX, TXT. 25MB max.
                   </p>
                   {dropzone.acceptedFiles.length > 0 && (
                     <div>
