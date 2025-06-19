@@ -9,7 +9,7 @@ interface WorkingProps {
 
 export default function Working({
   linesCount = 3,
-  lineSpacing = 50,
+  lineSpacing = 30,
   strokeColor = "black",
   strokeWidth = 1,
 }: WorkingProps) {

@@ -10,7 +10,6 @@ import { Loader2 } from "lucide-react";
 import { InlineMath } from "react-katex";
 import "katex/dist/katex.min.css";
 import Graph from "@/components/graph";
-import { Button } from "@/components/ui/button";
 import Working from "@/components/working";
 
 export default function GeneratePage() {
@@ -78,7 +77,7 @@ export default function GeneratePage() {
 
   return (
     <main className="flex flex-col min-h-screen bg-muted space-y-4 py-8 px-4">
-      <h1 className="text-3xl font-bold text-center">
+      <h1 className="text-2xl font-bold text-center">
         Generated Exam: <span className="text-primary">{topic}</span>
       </h1>
 
@@ -94,19 +93,10 @@ export default function GeneratePage() {
       )}
 
       {examOutput && (
-        <div className="whitespace-pre-wrap text-xl bg-white p-4 rounded text-black font-sans">
+        <div className="whitespace-pre-wrap text-lg bg-white p-4 rounded text-black font-sans">
           {renderMathInline(examOutput)}
         </div>
       )}
-
-      <Button
-        className="mt-4"
-        onClick={() => {
-          router.push("/");
-        }}
-      >
-        Back to Home
-      </Button>
     </main>
   );
 }
