@@ -1,3 +1,4 @@
+/** eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -6,11 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Dropzone, { DropzoneState } from "shadcn-dropzone";
 
 export default function Home() {
   const router = useRouter();
-  const { topic, apiKey, questions, setTopic, setApiKey, setQuestions } =
-    useExamStore();
+  const {
+    topic,
+    apiKey,
+    questions,
+    files,
+    setTopic,
+    setApiKey,
+    setQuestions,
+    setFiles,
+  } = useExamStore();
 
   const handleGenerate = () => {
     if (!topic || !apiKey) return alert("Please fill all fields");
@@ -18,8 +28,8 @@ export default function Home() {
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-muted px-4">
-      <Card className="w-full max-w-xl shadow-xl p-6">
+    <main className="flex items-center justify-center min-h-screen bg-muted">
+      <Card className="w-full max-w-xl shadow-xl p-6 py-8">
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
             <h1 className="font-bold text-4xl sm:text-5xl tracking-tight">
@@ -62,6 +72,32 @@ export default function Home() {
                 type="password"
               />
             </div>
+
+            <Dropzone
+              dropZoneClassName="p-3 rounded"
+              onDrop={(acceptedFiles: File[]) => {
+                console.log(acceptedFiles);
+                setFiles(acceptedFiles);
+              }}
+            >
+              {(dropzone: DropzoneState) => (
+                <div className="flex flex-col items-center justify-center">
+                  <p className="text-sm text-muted-foreground">
+                    Drag and drop your file here or click to select a file.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Supported formats: PDF, DOCX, TXT
+                  </p>
+                  {dropzone.acceptedFiles.length > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Files: {dropzone.acceptedFiles.length}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Dropzone>
 
             <Button className="w-full text-lg mt-2" onClick={handleGenerate}>
               <span className="text-white">🚀 Generate Exam</span>

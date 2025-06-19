@@ -4,10 +4,12 @@ export async function generateExam({
   topic,
   apiKey,
   questions,
+  files,
 }: {
   topic: string;
   apiKey: string;
   questions: number;
+  files: File[];
 }) {
   const prompt = `
     You are generating an exam. Instructions:
@@ -23,35 +25,49 @@ export async function generateExam({
     - Include question numbers in the format "Question X: "
   `;
 
+  const model = "gemma-3n-e4b-it";
   const ai = new GoogleGenAI({
     apiKey: apiKey,
   });
 
-  const response = await ai.models.generateContent({
-    model: "gemma-3n-e4b-it",
-    contents: prompt,
-    // config: {
-    //   responseMimeType: "application/json",
-    //   responseSchema: {
-    //     type: "object",
-    //     properties: {
-    //       questions: {
-    //         type: "array",
-    //         items: {
-    //           type: "object",
-    //           properties: {
-    //             question: { type: "string" },
-    //             solution: { type: "string" },
-    //             markAllocation: { type: "number" },
-    //           },
-    //           required: ["question", "solution", "markAllocation"],
-    //         },
-    //       },
-    //     },
-    //     required: ["questions"],
-    //   },
-    // },
-  });
+  if (files) {
+    const contents = [
+      { text: prompt },
+      {
+        inlineData: {
+          mimeType: "application/pdf",
+          data: await fileToBase64(files[0]),
+        },
+      },
+    ];
 
-  return response.text;
+    const response = await ai.models.generateContent({
+      model: "gemma-3-27b-it",
+      contents: contents,
+    });
+
+    return response.text;
+  } else {
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+    });
+
+    return response.text;
+  }
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      resolve(base64String.split(",")[1]); // remove data:mime/type;base64, part
+    };
+
+    reader.onerror = (error) => reject(error);
+
+    reader.readAsDataURL(file); // Encodes the file as a base64 data URL
+  });
 }

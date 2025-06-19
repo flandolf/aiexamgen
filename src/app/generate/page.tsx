@@ -13,7 +13,7 @@ import Graph from "@/components/graph";
 import Working from "@/components/working";
 
 export default function GeneratePage() {
-  const { topic, apiKey, questions } = useExamStore();
+  const { topic, apiKey, questions, files } = useExamStore();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ export default function GeneratePage() {
       return;
     }
 
-    generateExam({ topic, apiKey, questions })
+    generateExam({ topic, apiKey, questions, files })
       .then((textOutput) => {
         if (textOutput === undefined) {
           setError("No exam generated");
