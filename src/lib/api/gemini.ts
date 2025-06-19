@@ -29,8 +29,7 @@ export async function generateExam({
   const ai = new GoogleGenAI({
     apiKey: apiKey,
   });
-
-  if (files) {
+  if (files.length != 0) {
     const contents = [
       { text: prompt },
       {
