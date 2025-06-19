@@ -15,7 +15,6 @@ export default function Home() {
     topic,
     apiKey,
     questions,
-    files,
     setTopic,
     setApiKey,
     setQuestions,
