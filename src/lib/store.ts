@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-interface ExamConfig {
+interface ExamStore {
   topic: string;
   apiKey: string;
   questions: number;
@@ -9,11 +9,24 @@ interface ExamConfig {
   setQuestions: (questions: number) => void;
 }
 
-export const useExamStore = create<ExamConfig>((set) => ({
+// Load from localStorage (with null checks for SSR)
+const getInitialApiKey = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("apiKey") || "";
+  }
+  return "";
+};
+
+export const useExamStore = create<ExamStore>((set) => ({
   topic: "",
-  apiKey: "",
-  questions: 0,
+  apiKey: getInitialApiKey(),
+  questions: 15,
   setTopic: (topic) => set({ topic }),
-  setApiKey: (apiKey) => set({ apiKey }),
+  setApiKey: (apiKey) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("apiKey", apiKey);
+    }
+    set({ apiKey });
+  },
   setQuestions: (questions) => set({ questions }),
 }));

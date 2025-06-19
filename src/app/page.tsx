@@ -64,7 +64,15 @@ export default function Home() {
             </div>
 
             <Button className="w-full text-lg mt-2" onClick={handleGenerate}>
-              🚀 Generate Exam
+              <span className="text-white">🚀 Generate Exam</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setApiKey("")}
+            >
+              Clear API Key
             </Button>
           </div>
         </CardContent>
