@@ -1,4 +1,3 @@
-/** eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useExamStore } from "@/lib/store";
@@ -44,7 +43,7 @@ export default function GeneratePage() {
 
   if (!topic || !apiKey) return null;
 
-  function renderMathInline(input: string) {
+  function renderProper(input: string) {
     const parts = input
       .replace(/\n{3,}/g, "\n")
       .split(/(\$[^$]+\$|\{graph\}|\{working\(\d+\)\})/g);
@@ -94,7 +93,7 @@ export default function GeneratePage() {
 
       {examOutput && (
         <div className="whitespace-pre-wrap text-lg bg-white p-4 rounded text-black font-sans">
-          {renderMathInline(examOutput)}
+          {renderProper(examOutput)}
         </div>
       )}
     </main>

@@ -13,16 +13,16 @@ export async function generateExam({
 }) {
   const prompt = `
     You are generating a high quality exam. Instructions:
-    Generate ${questions} exam questions on the topic: "${topic}"
-    - Use LaTeX formatting for equations ($...$) and all numbers and variable definitions otherwise plain text
-    - Include mark allocations (e.g., [3 marks])
-    - Newline after each question
-    - No images
-    - Blank graph can be inserted in order to get user to sketch a function, just type "{graph}"
-    - Only respond with questions, no intro
-    - Insert {working(num)} after each question to insert *num* working out appropriate for each mark allocation. So, for example for 3 lines do {working(3)} not {working(1)} {working(2)} {working(3)}
+    Generate ${questions} exam questions on the topic: "${topic}".
+    - Use LaTeX formatting for equations ($...$) and all numbers and variable definitions otherwise plain text.
+    - Include mark allocations (e.g., [3 marks]).
+    - Newline after each question.
+    - No images / graphs with data, you are not capable of generating graphs or images.
+    - Blank graph can be inserted in order to get user to sketch a function, just type "{graph}".
+    - Only respond with questions, no intro.
+    - Insert {working(num)} after each question to insert *num* working out appropriate for each mark allocation. So, for example for 3 lines do {working(3)} not {working(1)} {working(2)} {working(3)}.
     - Do NOT give working out / answers.
-    - Include question numbers in the format "Question X: "
+    - Include question numbers in the format "Question X: ".
   `;
 
   const model = "gemma-3n-e4b-it";
