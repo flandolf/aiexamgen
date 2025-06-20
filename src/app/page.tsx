@@ -88,6 +88,10 @@ export default function Home() {
             >
               Clear API Key
             </Button>
+            <p className="text-xs text-gray-300">
+              &copy; {new Date().getFullYear()} AI Exam Generator |{" "}
+              {process.env.NEXT_PUBLIC_COMMIT_SHA}
+            </p>
           </div>
         </CardContent>
       </Card>
