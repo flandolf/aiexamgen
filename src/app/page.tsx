@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Dropzone, { DropzoneState } from "shadcn-dropzone";
+import Dropzone from "@/components/dropzone";
 
 export default function Home() {
   const router = useRouter();
@@ -73,30 +73,10 @@ export default function Home() {
             </div>
 
             <Dropzone
-              dropZoneClassName="p-3 rounded"
-              onDrop={(acceptedFiles: File[]) => {
-                console.log(acceptedFiles);
-                setFiles(acceptedFiles);
+              onDrop={(file: File[]) => {
+                setFiles(file);
               }}
-            >
-              {(dropzone: DropzoneState) => (
-                <div className="flex flex-col items-center justify-center">
-                  <p className="text-sm text-muted-foreground">
-                    Drag and drop your file here or click to select a file.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Supported formats: PDF, DOCX, TXT. 25MB max.
-                  </p>
-                  {dropzone.acceptedFiles.length > 0 && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Files: {dropzone.acceptedFiles.length}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </Dropzone>
+            />
 
             <Button className="w-full text-lg mt-2" onClick={handleGenerate}>
               <span className="text-white">🚀 Generate Exam</span>
