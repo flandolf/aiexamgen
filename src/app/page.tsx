@@ -26,7 +26,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-muted">
+    <main className="flex items-center justify-center min-h-screen bg-gradient-to-r from-muted/80 to-primary/50 ">
       <Card className="w-full max-w-xl shadow-xl p-6 py-8">
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
