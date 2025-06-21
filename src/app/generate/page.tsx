@@ -3,7 +3,7 @@
 import { useExamStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { generateExam } from "@/lib/api/gemini";
+import { generateExam, generateTitle } from "@/lib/api/gemini";
 import { Loader2 } from "lucide-react";
 
 import { InlineMath } from "react-katex";
@@ -18,12 +18,21 @@ export default function GeneratePage() {
   const [loading, setLoading] = useState(true);
   const [examOutput, setExamOutput] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState<string | null>(null);
 
   useEffect(() => {
     if (!topic || !apiKey) {
       router.push("/");
       return;
     }
+
+    generateTitle(topic, apiKey)
+      .then((title) => {
+        setTitle(title ? title : topic);
+      })
+      .catch((err) => {
+        setError(err.message);
+      });
 
     generateExam({ topic, apiKey, questions, files })
       .then((textOutput) => {
@@ -77,7 +86,7 @@ export default function GeneratePage() {
   return (
     <main className="flex flex-col min-h-screen bg-white space-y-4 py-8 px-4">
       <h1 className="text-2xl font-bold text-center text-black">
-        Generated Exam: <span className="text-primary">{topic}</span>
+        Generated Exam: <span className="text-primary">{title}</span>
       </h1>
 
       {loading && (

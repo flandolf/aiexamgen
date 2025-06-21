@@ -64,6 +64,34 @@ export async function generateExam({
   }
 }
 
+export async function generateTitle(topic: string, apiKey: string) {
+  const prompt = `
+  You are a professional educator generating clean, descriptive titles for educational resources.
+
+  Instructions:
+  - Create **one** clear, concise, and academically appropriate title.
+  - The title should reflect the topic: "${topic}".
+  - Use proper title casing (Capitalize Main Words).
+  - Do NOT include a colon, dash, or subtitle—just a single-line title.
+  - Do NOT include quotation marks, explanations, or any additional text.
+  - Your output should only be the title. No prefixes like "Title:" or any extra content.
+
+  Topic: "${topic}"
+  `;
+
+  const model = "gemma-3n-e4b-it";
+  const ai = new GoogleGenAI({
+    apiKey: apiKey,
+  });
+
+  const response = await ai.models.generateContent({
+    model: model,
+    contents: prompt,
+  });
+
+  return response.text;
+}
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
