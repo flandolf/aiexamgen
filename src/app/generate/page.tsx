@@ -6,10 +6,8 @@ import { useEffect, useState } from "react";
 import { generateExam, generateTitle } from "@/lib/api/gemini";
 import { Loader2 } from "lucide-react";
 
-import { InlineMath } from "react-katex";
 import "katex/dist/katex.min.css";
-import Graph from "@/components/graph";
-import Working from "@/components/working";
+import { renderProper } from "@/components/renderer";
 
 export default function GeneratePage() {
   const { topic, apiKey, questions, files } = useExamStore();
@@ -52,37 +50,6 @@ export default function GeneratePage() {
 
   if (!topic || !apiKey) return null;
 
-  function renderProper(input: string) {
-    const parts = input
-      .replace(/\n{3,}/g, "\n")
-      .split(/(\$[^$]+\$|\{graph\}|\{working\(\d+\)\})/g);
-    return parts
-      .filter((part) => part !== "")
-      .map((part, index) => {
-        if (part.startsWith("$") && part.endsWith("$")) {
-          const math = part.slice(1, -1);
-          return <InlineMath key={index}>{math}</InlineMath>;
-        } else if (part === "{graph}") {
-          return (
-            <div key={index} className="m-2">
-              <Graph />
-            </div>
-          );
-        } else if (part.startsWith("{working(") && part.endsWith(")}")) {
-          const linesCount = parseInt(
-            part.match(/\{working\((\d+)\)\}/)?.[1] || "8",
-          );
-          return (
-            <div key={index} className="m-2">
-              <Working linesCount={linesCount} />
-            </div>
-          );
-        } else {
-          return <span key={index}>{part}</span>;
-        }
-      });
-  }
-
   return (
     <main className="flex flex-col min-h-screen bg-white space-y-4 py-8 px-4">
       <h1 className="text-2xl font-bold text-center text-black">
@@ -103,6 +70,7 @@ export default function GeneratePage() {
       {examOutput && (
         <div className="whitespace-pre-wrap text-lg bg-white p-4 rounded text-black font-sans">
           {renderProper(examOutput)}
+          {examOutput}
         </div>
       )}
     </main>
