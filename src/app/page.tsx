@@ -26,19 +26,21 @@ export default function Home() {
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gradient-to-r from-muted/80 to-primary/50 ">
-      <Card className="w-full max-w-xl shadow-xl p-6 py-8">
-        <CardContent className="space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="font-bold text-4xl sm:text-5xl tracking-tight">
+    <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-muted/80 to-primary/40">
+      <Card className="w-full max-w-xl shadow-xl border-none bg-background/90 backdrop-blur-sm">
+        <CardContent className="p-8 space-y-4">
+          {/* Header */}
+          <div className="text-center space-y-1">
+            <h1 className="font-bold text-4xl md:text-5xl tracking-tight">
               AI Exam Generator
             </h1>
-            <p className="text-muted-foreground text-base">
+            <p className="text-muted-foreground text-sm md:text-base">
               Instantly generate AI-powered practice exams.
             </p>
           </div>
 
-          <div className="space-y-4">
+          {/* Form Fields */}
+          <div className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="topic">Topic</Label>
               <Input
@@ -56,7 +58,8 @@ export default function Home() {
                 id="questions"
                 value={questions}
                 onChange={(e) => setQuestions(parseInt(e.target.value))}
-                placeholder="Number of Questions"
+                placeholder="e.g. 10"
+                min={1}
               />
             </div>
 
@@ -77,22 +80,27 @@ export default function Home() {
               }}
             />
 
-            <Button className="w-full text-lg mt-2" onClick={handleGenerate}>
-              <span className="text-white">🚀 Generate Exam</span>
-            </Button>
+            {/* Buttons */}
+            <div className="space-y-3">
+              <Button className="w-full text-lg" onClick={handleGenerate}>
+                <span className="text-white">Generate Exam</span>
+              </Button>
 
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setApiKey("")}
-            >
-              Clear API Key
-            </Button>
-            <p className="text-xs text-gray-300">
-              &copy; {new Date().getFullYear()} AI Exam Generator |{" "}
-              {process.env.NEXT_PUBLIC_COMMIT_SHA}
-            </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setApiKey("")}
+              >
+                Clear API Key
+              </Button>
+            </div>
           </div>
+
+          {/* Footer */}
+          <p className="text-xs text-center text-muted-foreground pt-6">
+            &copy; {new Date().getFullYear()} AI Exam Generator |{" "}
+            {process.env.NEXT_PUBLIC_COMMIT_SHA || "development"}
+          </p>
         </CardContent>
       </Card>
     </main>

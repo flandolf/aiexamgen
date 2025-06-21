@@ -75,8 +75,8 @@ export default function GeneratePage() {
   }
 
   return (
-    <main className="flex flex-col min-h-screen bg-muted space-y-4 py-8 px-4">
-      <h1 className="text-2xl font-bold text-center">
+    <main className="flex flex-col min-h-screen bg-white space-y-4 py-8 px-4">
+      <h1 className="text-2xl font-bold text-center text-black">
         Generated Exam: <span className="text-primary">{topic}</span>
       </h1>
 

@@ -12,17 +12,25 @@ export async function generateExam({
   files: File[];
 }) {
   const prompt = `
-    You are generating a high quality exam. Instructions:
-    Generate ${questions} exam questions on the topic: "${topic}".
-    - Use LaTeX formatting for equations ($...$) and all numbers and variable definitions otherwise plain text.
-    - Include mark allocations (e.g., [3 marks]).
-    - Newline after each question.
-    - No images / graphs with data, you are not capable of generating graphs or images.
-    - Blank graph can be inserted in order to get user to sketch a function, just type "{graph}".
-    - Only respond with questions, no intro.
-    - Insert {working(num)} after each question to insert *num* working out appropriate for each mark allocation. So, for example for 3 lines do {working(3)} not {working(1)} {working(2)} {working(3)}.
-    - Do NOT give working out / answers.
-    - Include question numbers in the format "Question X: ".
+  You are generating a structured, high-quality exam. Follow these instructions **exactly**:
+
+  - Generate exactly ${questions} distinct exam questions on the topic: "${topic}".
+  - Each question must begin with the format: **"Question X:"** where X is the question number.
+  - All mathematical notation must be written using **LaTeX formatting**, using inline math mode with dollar signs ($...$).
+    - Use LaTeX for all equations, variables, and numeric expressions.
+    - Use plain text only for instructions, descriptions, or context—not for maths.
+  - After each question:
+    - Insert the appropriate mark allocation in the format: [X marks], where X is a positive integer reflecting complexity.
+    - Then insert: **{working(X)}** where X matches the number of marks, to indicate how many lines of working should be printed.
+      - Example: If a question is worth 4 marks, append **{working(4)}**.
+  - Insert a newline after each question and its working tag.
+  - Do NOT include any images, diagrams, or graphs.
+    - To request a user to sketch, include the placeholder **{graph}** where relevant (e.g., sketching a function).
+  - Do NOT include any explanations, answers, or solutions.
+  - Do NOT include any headings, titles, summaries, or preambles.
+  - You MUST only output the questions, formatted exactly as described.
+
+  Strictly follow this format without deviations. This is for auto-generation in an exam interface.
   `;
 
   const model = "gemma-3n-e4b-it";
