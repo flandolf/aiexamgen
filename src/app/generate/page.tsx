@@ -70,7 +70,6 @@ export default function GeneratePage() {
       {examOutput && (
         <div className="whitespace-pre-wrap text-lg bg-white p-4 rounded text-black font-sans">
           {renderProper(examOutput)}
-          {examOutput}
         </div>
       )}
     </main>
