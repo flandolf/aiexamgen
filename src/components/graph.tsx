@@ -18,7 +18,7 @@ export default function Graph() {
               y1={0}
               x2={x}
               y2={height}
-              stroke="#eee"
+              stroke="gray"
               strokeWidth="1"
             />
           );
@@ -32,12 +32,11 @@ export default function Graph() {
               y1={y}
               x2={width}
               y2={y}
-              stroke="#eee"
+              stroke="gray"
               strokeWidth="1"
             />
           );
         })}
-
         {/* Axes */}
         <line
           x1="0"
@@ -55,7 +54,43 @@ export default function Graph() {
           stroke="black"
           strokeWidth="1.5"
         />
-
+        {/* Bounding box (encloses all edges) */}
+        <line
+          x1="0"
+          y1="0"
+          x2={width}
+          y2="0"
+          stroke="black"
+          strokeWidth="1.5"
+        />{" "}
+        {/* Top */}
+        <line
+          x1="0"
+          y1="0"
+          x2="0"
+          y2={height}
+          stroke="black"
+          strokeWidth="1.5"
+        />{" "}
+        {/* Left */}
+        <line
+          x1="0"
+          y1={height}
+          x2={width}
+          y2={height}
+          stroke="black"
+          strokeWidth="1.5"
+        />{" "}
+        {/* Bottom */}
+        <line
+          x1={width}
+          y1="0"
+          x2={width}
+          y2={height}
+          stroke="black"
+          strokeWidth="1.5"
+        />{" "}
+        {/* Right */}
         {/* Axis labels */}
         <text x={xMid + 5} y="12" fontSize="12" fill="black">
           y

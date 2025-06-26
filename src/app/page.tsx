@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Dropzone from "@/components/dropzone";
+import ModelSelect from "@/components/model-select";
 
 export default function Home() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function Home() {
     setApiKey,
     setQuestions,
     setFiles,
+    model,
+    setModel,
   } = useExamStore();
 
   const handleGenerate = () => {
@@ -74,6 +77,7 @@ export default function Home() {
               />
             </div>
 
+            <ModelSelect model={model} setModel={setModel} />
             <Dropzone
               onDrop={(file: File[]) => {
                 setFiles(file);

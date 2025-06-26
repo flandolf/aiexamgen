@@ -5,11 +5,13 @@ export async function generateExam({
   apiKey,
   questions,
   files,
+  model,
 }: {
   topic: string;
   apiKey: string;
   questions: number;
   files: File[];
+  model: string;
 }) {
   const prompt = `
   You are generating a structured, high-quality exam. Follow these instructions **exactly**:
@@ -33,7 +35,6 @@ export async function generateExam({
   Strictly follow this format without deviations. This is for auto-generation in an exam interface.
   `;
 
-  const model = "gemma-3n-e4b-it";
   const ai = new GoogleGenAI({
     apiKey: apiKey,
   });
@@ -49,7 +50,7 @@ export async function generateExam({
     ];
 
     const response = await ai.models.generateContent({
-      model: "gemma-3-27b-it",
+      model: model,
       contents: contents,
     });
 
@@ -79,7 +80,7 @@ export async function generateTitle(topic: string, apiKey: string) {
   Topic: "${topic}"
   `;
 
-  const model = "gemma-3n-e4b-it";
+  const model = "gemma-3-1b-it";
   const ai = new GoogleGenAI({
     apiKey: apiKey,
   });
