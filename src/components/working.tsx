@@ -9,8 +9,8 @@ interface WorkingProps {
 
 export default function Working({
   linesCount = 3,
-  lineSpacing = 30,
-  strokeColor = "black",
+  lineSpacing = 40,
+  strokeColor = "#e5e7eb",
   strokeWidth = 1,
 }: WorkingProps) {
   // Calculate dimensions dynamically
@@ -25,26 +25,29 @@ export default function Working({
   );
 
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox={`0 0 100 ${height}`} // Using viewBox for responsive scaling
-      preserveAspectRatio="none" // Stretch to fill container
-      role="img"
-      aria-label={`${linesCount} working lines`}
-      style={{ backgroundColor: "white", display: "block" }} // block display for proper sizing
-    >
-      {yPositions.map((y, idx) => (
-        <line
-          key={idx}
-          x1={0}
-          y1={y}
-          x2="100" // Full width of viewBox
-          y2={y}
-          stroke={strokeColor}
-          strokeWidth={strokeWidth}
-        />
-      ))}
-    </svg>
+    <div className="my-4 border border-gray-200 rounded-lg p-4 bg-gray-50/30">
+      <div className="text-xs text-gray-500 mb-2 font-medium">Working:</div>
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 100 ${height}`} // Using viewBox for responsive scaling
+        preserveAspectRatio="none" // Stretch to fill container
+        role="img"
+        aria-label={`${linesCount} working lines`}
+        style={{ backgroundColor: "transparent", display: "block" }} // block display for proper sizing
+      >
+        {yPositions.map((y, idx) => (
+          <line
+            key={idx}
+            x1={0}
+            y1={y}
+            x2="100" // Full width of viewBox
+            y2={y}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        ))}
+      </svg>
+    </div>
   );
 }
