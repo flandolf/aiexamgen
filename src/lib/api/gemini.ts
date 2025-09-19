@@ -3,26 +3,32 @@ import { GoogleGenAI } from "@google/genai";
 export async function generateExam({
   topic,
   apiKey,
-  questions,
+  mcq,
+  shortAnswerQuestions,
   files,
   model,
 }: {
   topic: string;
   apiKey: string;
-  questions: number;
+  mcq: number;
+  shortAnswerQuestions: number;
   files: File[];
   model: string;
 }) {
   const prompt = `
   You are generating a structured, high-quality exam. Follow these instructions **exactly**:
 
-  - Generate exactly ${questions} distinct exam questions on the topic: "${topic}".
+  - Generate exactly ${mcq} multiple choice questions (MCQs) and ${shortAnswerQuestions} short answer questions on the topic: "${topic}".
   - Each question must begin with the format: "Question X:" where X is the question number.
+  - For MCQs:
+    - Provide 4 distinct answer options labeled A, B, C, and D.
+    - Only include one correct answer per MCQ.
+    - Do NOT indicate the correct answer in the question.
   - All mathematical notation must be written using **LaTeX formatting**, with inline math mode using the delimiter: $ ($...$).
     - Use LaTeX only for equations, variables, and numeric expressions that are part of the mathematics.
     - For any monetary values or currency (e.g., $25), **do NOT use the "$" symbol or LaTeX**.
       - Instead, write out the amount in words, e.g., **"25 dollars"**.
-  - After each question:
+  - After each question (MCQ or short answer):
     - Insert the appropriate mark allocation in the format: [X marks], where X is a positive integer reflecting complexity.
     - Then insert: **{working(X)}** where X matches the number of marks, to indicate how many lines of working should be printed.
       - Example: If a question is worth 4 marks, append **{working(4)}**.
@@ -30,7 +36,6 @@ export async function generateExam({
   - Do NOT include any images, diagrams, or graphs.
     - To request a user to sketch, include the placeholder **{graph}** where relevant (e.g., sketching a function).
   - Do NOT include any explanations, answers, or solutions.
-  - Do NOT include any headings, titles, summaries, or preambles.
 
   Strictly follow this format without deviations. This is for auto-generation in an exam interface.
   `;

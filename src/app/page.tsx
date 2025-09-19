@@ -14,10 +14,12 @@ export default function Home() {
   const {
     topic,
     apiKey,
-    questions,
+    mcq,
+    shortAnswerQuestions,
     setTopic,
     setApiKey,
-    setQuestions,
+    setMcq,
+    setShortAnswerQuestions,
     setFiles,
     model,
     setModel,
@@ -55,12 +57,24 @@ export default function Home() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="questions">Number of Questions</Label>
+              <Label htmlFor="shortAnswerQuestions">Number of Short Answer</Label>
               <Input
                 type="number"
-                id="questions"
-                value={questions}
-                onChange={(e) => setQuestions(parseInt(e.target.value))}
+                id="shortAnswerQuestions"
+                value={shortAnswerQuestions}
+                onChange={(e) => setShortAnswerQuestions(parseInt(e.target.value))}
+                placeholder="e.g. 5"
+                min={0}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mcq">Number of MCQs</Label>
+              <Input
+                type="number"
+                id="mcq"
+                value={mcq}
+                onChange={(e) => setMcq(parseInt(e.target.value))}
                 placeholder="e.g. 10"
                 min={1}
               />

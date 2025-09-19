@@ -10,7 +10,7 @@ import "katex/dist/katex.min.css";
 import { renderProper } from "@/components/renderer";
 
 export default function GeneratePage() {
-  const { topic, apiKey, questions, files, model } = useExamStore();
+  const { topic, apiKey, mcq, shortAnswerQuestions, files, model } = useExamStore();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function GeneratePage() {
         setError(err.message);
       });
 
-    generateExam({ topic, apiKey, questions, files, model })
+    generateExam({ topic, apiKey, mcq, shortAnswerQuestions, files, model })
       .then((textOutput) => {
         if (textOutput === undefined) {
           setError("No exam generated");
@@ -46,7 +46,7 @@ export default function GeneratePage() {
         setError(err.message);
         setLoading(false);
       });
-  }, [topic, apiKey, questions, files, router, model]);
+  }, [topic, apiKey, mcq, shortAnswerQuestions, files, router, model]);
 
   if (!topic || !apiKey) return null;
 

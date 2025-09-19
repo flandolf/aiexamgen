@@ -4,12 +4,14 @@ import { persist } from "zustand/middleware";
 interface ExamStore {
   topic: string;
   apiKey: string;
-  questions: number;
+  mcq: number;
+  shortAnswerQuestions: number;
   files: File[];
   model: string;
   setTopic: (topic: string) => void;
   setApiKey: (apiKey: string) => void;
-  setQuestions: (questions: number) => void;
+  setMcq: (mcq: number) => void;
+  setShortAnswerQuestions: (shortAnswerQuestions: number) => void;
   setFiles: (files: File[]) => void;
   setModel: (model: string) => void;
 }
@@ -19,12 +21,14 @@ export const useExamStore = create<ExamStore>()(
     (set) => ({
       topic: "",
       apiKey: "",
-      questions: 15,
+      mcq: 10,
+      shortAnswerQuestions: 10,
       files: [],
       model: "",
       setTopic: (topic) => set({ topic }),
       setApiKey: (apiKey) => set({ apiKey }),
-      setQuestions: (questions) => set({ questions }),
+      setMcq: (mcq) => set({ mcq }),
+      setShortAnswerQuestions: (shortAnswerQuestions) => set({ shortAnswerQuestions }),
       setFiles: (files) => set({ files }),
       setModel: (model) => set({ model }),
     }),
