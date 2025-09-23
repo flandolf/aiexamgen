@@ -42,6 +42,7 @@ export default function GeneratePage() {
           setLoading(false);
           return;
         }
+        console.debug("Generated Exam Output:", textOutput);
         setExamOutput(textOutput);
         setLoading(false);
       })
@@ -77,6 +78,7 @@ export default function GeneratePage() {
         <html>
         <head>
           <title>${title || topic} - Exam</title>
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MV4YMBfFfNHLXQWT0nHDFqlQZE3D+WK6l+2qOKR9hbI7QFfYyW0vNQ8m3jW4v7" crossorigin="anonymous">
           <style>
             body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
             .no-print { display: none; }

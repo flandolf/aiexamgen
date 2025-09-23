@@ -1,5 +1,5 @@
 import React from "react";
-import { InlineMath } from "react-katex";
+import { InlineMath, BlockMath } from "react-katex";
 import Graph from "@/components/graph";
 import Working from "@/components/working";
 
@@ -11,11 +11,26 @@ interface RenderRule {
 }
 
 const renderRules: RenderRule[] = [
+  // Display math delimited by $$...$$ (single-line)
   {
-    name: "math",
+    name: "display_math_dollars",
+    regex: /^\$\$([\s\S]+?)\$\$$/,
+    component: BlockMath,
+    getProps: (match) => ({ children: match[1].trim() }),
+  },
+  // Display math delimited by \[...\] (single-line)
+  {
+    name: "display_math_brackets",
+    regex: /^\\\[([\s\S]+?)\\\]$/,
+    component: BlockMath,
+    getProps: (match) => ({ children: match[1].trim() }),
+  },
+  // If a whole line is $...$, treat as display math
+  {
+    name: "inline_line_math_as_block",
     regex: /^\$([^$]+)\$$/,
-    component: InlineMath,
-    getProps: (match) => ({ children: match[1] }),
+    component: BlockMath,
+    getProps: (match) => ({ children: match[1].trim() }),
   },
   {
     name: "graph",
@@ -47,7 +62,7 @@ const renderRules: RenderRule[] = [
             {title}
           </h2>
           {subtitle && (
-            <p className="text-base font-medium text-gray-700 mt-2 print:text-sm">{subtitle}</p>
+            <p className="text-base font-medium text-gray-700 mt-2 print:text-sm">{processInlineElements(subtitle)}</p>
           )}
         </div>
         <div className="text-center mt-4 text-sm text-gray-600 italic print:text-xs print:mt-2">
@@ -63,20 +78,31 @@ const renderRules: RenderRule[] = [
   {
     name: "question",
     regex: /^Question (\d+):\s*(.*)$/,
-    component: ({ number, text }) => (
-      <div className="mt-8 mb-4 print:mt-6 print:mb-3 print:page-break-inside-avoid">
-        <div className="flex items-start">
-          <div className="bg-gray-800 text-white px-3 py-1 rounded-sm font-bold text-lg mr-4 print:bg-black print:text-sm print:px-2">
-            {number}
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-medium text-gray-900 leading-relaxed print:text-base print:leading-tight">
-              {text}
-            </h3>
+    component: ({ number, text }) => {
+      const isDisplayDollar = /^\$\$([\s\S]+)\$\$\s*$/.test(text);
+      const isDisplayBracket = /^\\\[([\s\S]+)\\\]\s*$/.test(text);
+      const isWholeLineInline = /^\$([^$]+)\$\s*$/.test(text);
+      return (
+        <div className="mt-8 mb-4 print:mt-6 print:mb-3 print:page-break-inside-avoid">
+          <div className="flex items-start">
+            <div className="bg-gray-800 text-white px-3 py-1 rounded-sm font-bold text-lg mr-4 print:bg-black print:text-sm print:px-2">
+              {number}
+            </div>
+            <div className="flex-1">
+              {isDisplayDollar || isDisplayBracket || isWholeLineInline ? (
+                <div className="mt-1">
+                  <BlockMath math={text.replace(/^\$\$|\$\$$/g, "").replace(/^\\\\\[|\\\\\]$/g, "").replace(/^\$|\$$/g, "").trim()} />
+                </div>
+              ) : (
+                <h3 className="text-lg font-medium text-gray-900 leading-relaxed print:text-base print:leading-tight">
+                  {processInlineElements(text)}
+                </h3>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    ),
+      );
+    },
     getProps: (match) => ({ 
       number: match[1], 
       text: match[2] 
@@ -107,7 +133,7 @@ const renderRules: RenderRule[] = [
           </span>
         </div>
         <span className="text-gray-800 leading-relaxed pt-1 print:text-sm print:pt-0.5 print:leading-tight">
-          {text}
+          {processInlineElements(text)}
         </span>
       </div>
     ),
@@ -126,7 +152,7 @@ const renderRules: RenderRule[] = [
             {type.toUpperCase()}:
           </span>
           <span className="text-gray-800 leading-relaxed print:text-sm">
-            {text}
+            {processInlineElements(text)}
           </span>
         </div>
       </div>
@@ -167,13 +193,68 @@ export function renderProper(input: string): React.ReactNode[] {
   const lines = sanitizedInput.split('\n');
   let key = 0;
 
+  // Handle multi-line display math blocks
+  let inDisplay = false;
+  let displayDelimiter: "$$" | "\\[" | null = null;
+  let displayBuffer: string[] = [];
+
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const rawLine = lines[i];
+    const line = rawLine.trim();
+
+    // When inside a display math block, accumulate until the closing delimiter
+    if (inDisplay) {
+      if (displayDelimiter === "$$") {
+        if (line.endsWith("$$")) {
+          const content = (displayBuffer.join("\n") + "\n" + rawLine.replace(/\$\$/g, "")).trim();
+          nodes.push(<BlockMath key={key++}>{content}</BlockMath>);
+          inDisplay = false;
+          displayDelimiter = null;
+          displayBuffer = [];
+          continue;
+        }
+      } else if (displayDelimiter === "\\[") {
+        if (line.endsWith("\\]")) {
+          const content = (displayBuffer.join("\n") + "\n" + rawLine.replace(/\\\\\]/, "")).trim();
+          nodes.push(<BlockMath key={key++}>{content}</BlockMath>);
+          inDisplay = false;
+          displayDelimiter = null;
+          displayBuffer = [];
+          continue;
+        }
+      }
+      displayBuffer.push(rawLine);
+      continue;
+    }
     
     // Skip empty lines but add appropriate spacing
     if (!line) {
       if (i > 0 && i < lines.length - 1) {
         nodes.push(<div key={key++} className="h-3 print:h-2" />);
+      }
+      continue;
+    }
+
+    // Start of display math blocks
+    if (line.startsWith("$$")) {
+      if (line.endsWith("$$") && line.length > 3) {
+        const content = line.replace(/^\$\$|\$\$$/g, "").trim();
+        nodes.push(<BlockMath key={key++}>{content}</BlockMath>);
+      } else {
+        inDisplay = true;
+        displayDelimiter = "$$";
+        displayBuffer = [rawLine.replace(/^\$\$/, "")];
+      }
+      continue;
+    }
+    if (line.startsWith("\\[")) {
+      if (line.endsWith("\\]") && line.length > 3) {
+        const content = line.replace(/^\\\\\[|\\\\\]$/g, "").trim();
+        nodes.push(<BlockMath key={key++}>{content}</BlockMath>);
+      } else {
+        inDisplay = true;
+        displayDelimiter = "\\[";
+        displayBuffer = [rawLine.replace(/^\\\\\[/, "")];
       }
       continue;
     }
@@ -228,28 +309,52 @@ export function renderProper(input: string): React.ReactNode[] {
  */
 function processInlineElements(text: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = [];
-  const mathRegex = /\$([^$]+)\$/g;
-  let lastIndex = 0;
   let key = 0;
 
-  for (const match of text.matchAll(mathRegex)) {
-    const matchIndex = match.index as number;
-    
-    // Add text before math
-    if (matchIndex > lastIndex) {
-      const textPart = text.substring(lastIndex, matchIndex);
-      nodes.push(<span key={key++}>{textPart}</span>);
+  // Split out any inline display segments $$...$$ first
+  const displayRegex = /\$\$([\s\S]+?)\$\$/g;
+  let lastIndex = 0;
+  const segments: Array<{ type: "text" | "display"; value: string }> = [];
+  for (const match of text.matchAll(displayRegex)) {
+    const idx = match.index as number;
+    if (idx > lastIndex) {
+      segments.push({ type: "text", value: text.substring(lastIndex, idx) });
+    }
+    segments.push({ type: "display", value: match[1] });
+    lastIndex = idx + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    segments.push({ type: "text", value: text.substring(lastIndex) });
+  }
+  if (segments.length === 0) segments.push({ type: "text", value: text });
+
+  for (const seg of segments) {
+    if (seg.type === "display") {
+  nodes.push(<BlockMath key={key++}>{seg.value.trim()}</BlockMath>);
+      continue;
     }
 
-    // Add math component
-    nodes.push(<InlineMath key={key++}>{match[1]}</InlineMath>);
-    lastIndex = matchIndex + match[0].length;
-  }
-
-  // Add remaining text
-  if (lastIndex < text.length) {
-    const remainingText = text.substring(lastIndex);
-    nodes.push(<span key={key++}>{remainingText}</span>);
+    // Parse inline math in text segments: $...$ and \(...\)
+    const inlineRegex = /\$(.+?)\$|\\\((.+?)\\\)/g;
+    let iLast = 0;
+    for (const im of seg.value.matchAll(inlineRegex)) {
+      const iIdx = im.index as number;
+      if (iIdx > iLast) {
+        nodes.push(<span key={key++}>{seg.value.substring(iLast, iIdx)}</span>);
+      }
+      // im[1] is from $...$, im[2] is from \(...\)
+      const mathContent = (im[1] ?? im[2] ?? "").trim();
+      // Handle escaped dollar \$ -> render literally
+      if (im[0].startsWith("$") && seg.value[iIdx - 1] === "\\") {
+        nodes.push(<span key={key++}>{im[0].replace(/\\\$/g, "$")}</span>);
+      } else {
+  nodes.push(<InlineMath key={key++}>{mathContent}</InlineMath>);
+      }
+      iLast = iIdx + im[0].length;
+    }
+    if (iLast < seg.value.length) {
+      nodes.push(<span key={key++}>{seg.value.substring(iLast)}</span>);
+    }
   }
 
   return nodes.length > 0 ? nodes : [text];
