@@ -64,7 +64,7 @@ export async function generateExam({
   `}
 
   QUESTION FORMAT (all questions):
-  - First line: "Question X:" where X is 1, 2, 3, ...
+  - First line: "Question X: question" where X is 1, 2, 3, ... And question is a clear, specific question.
   - For MCQs:
     • Next 4 lines are the choices on separate lines labeled exactly: "A. ", "B. ", "C. ", "D. ".
     • Then add one line with marks in the format: "[N marks]" (use singular "mark" if N=1). No {working} or {answer} in MCQs.

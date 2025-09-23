@@ -279,8 +279,26 @@ export function renderProper(input: string): React.ReactNode[] {
     const qMatch = stripped.match(questionRule.regex);
     if (qMatch) {
       flushGroup();
-      const props = questionRule.getProps(qMatch as RegExpMatchArray);
       const Comp = questionRule.component;
+      // If no text on the same line, consume the next non-empty, non-option line as stem
+      let qNum = qMatch[1];
+      let qText = (qMatch[2] || "").trim();
+      if (!qText) {
+        let j = i + 1;
+        while (j < lines.length) {
+          const nxtRaw = lines[j];
+          const nxt = nxtRaw.trim();
+          if (!nxt) { j++; continue; }
+          const nxtStripped = nxt.replace(/^\*\*(.+)\*\*$|^__(.+)__$/,(m,_a,_b)=> (_a||_b||"")).trim() || nxt;
+          // stop if next is options, marks, section, or a new question
+          if (mcqRule.regex.test(nxtStripped) || sectionRule.regex.test(nxtStripped) || questionRule.regex.test(nxtStripped)) break;
+          // otherwise take as stem and consume
+          qText = nxtStripped;
+          i = j; // consume this line
+          break;
+        }
+      }
+      const props = { number: qNum, text: qText } as any;
       group.push(<Comp key={key++} {...props} />);
       inQuestion = true;
       enteredExam = true;
