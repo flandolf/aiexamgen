@@ -34,7 +34,7 @@ const renderRules: RenderRule[] = [
   },
   {
     name: "graph",
-    regex: /^\{graph\}$/,
+    regex: /^\{graph\}\s*$/,
     component: () => (
       <div className="my-6 flex justify-center print:my-4">
         <Graph />
@@ -44,19 +44,23 @@ const renderRules: RenderRule[] = [
   },
   {
     name: "working",
-    regex: /^\{working\((\d+)\)\}$/,
+    regex: /^\{working\(\s*(.*?)\s*\)\}\s*$/,
     component: ({ linesCount }) => (
       <div className="my-4 print:my-3">
         <Working linesCount={linesCount} />
       </div>
     ),
-    getProps: (match) => ({ linesCount: parseInt(match[1] || "8", 10) }),
+    getProps: (match) => {
+      const n = parseInt((match[1] ?? "").toString(), 10);
+      return { linesCount: Number.isFinite(n) ? n : 8 };
+    },
   },
   {
     name: "section_header",
-    regex: /^(SECTION [A-Z]|Part [IVX]+|Multiple Choice Questions?|Short Answer Questions?):\s*(.*)$/i,
+    // Supports: "Section A", "SECTION A:", "Part II - Algebra", "Multiple Choice Questions", "Short-Answer Questions: Topic"
+    regex: /^(?:(section|part)\s+([A-Z0-9IVX]+)\.?\s*(?:[:\-–—]\s*(.*))?|((?:Multiple(?:\s|-)?Choice(?:\s|-)?Questions?|Short(?:\s|-)?Answer(?:\s|-)?Questions?))\.?\s*(?:[:\-–—]\s*(.*))?)$/i,
     component: ({ title, subtitle }) => (
-      <div className="mt-12 mb-8 first:mt-8 print:mt-8 print:mb-6 print:page-break-before-auto">
+      <div className="mt-12 mb-8 first:mt-8 print:mt-8 print:mb-6 keep-with-next avoid-break">
         <div className="text-center border-2 border-gray-800 py-4 px-6 bg-gray-50 print:bg-white print:border-black">
           <h2 className="text-2xl font-bold text-gray-900 uppercase tracking-wide print:text-lg">
             {title}
@@ -70,10 +74,17 @@ const renderRules: RenderRule[] = [
         </div>
       </div>
     ),
-    getProps: (match) => ({ 
-      title: match[1], 
-      subtitle: match[2] 
-    }),
+    getProps: (match) => {
+      // Groups: 1=kind, 2=code, 3=subtitle1, 4=label, 5=subtitle2
+      const kind = match[1];
+      const code = match[2];
+      const subtitle1 = match[3];
+      const label = match[4];
+      const subtitle2 = match[5];
+      const title = label || (kind && code ? `${kind.toUpperCase()} ${code}` : match[0]);
+      const subtitle = subtitle1 || subtitle2 || "";
+      return { title, subtitle };
+    },
   },
   {
     name: "question",
@@ -83,12 +94,12 @@ const renderRules: RenderRule[] = [
       const isDisplayBracket = /^\\\[([\s\S]+)\\\]\s*$/.test(text);
       const isWholeLineInline = /^\$([^$]+)\$\s*$/.test(text);
       return (
-        <div className="mt-8 mb-4 print:mt-6 print:mb-3 print:page-break-inside-avoid">
+  <div className="mt-8 mb-4 print:mt-6 print:mb-3 avoid-break">
           <div className="flex items-start">
             <div className="bg-gray-800 text-white px-3 py-1 rounded-sm font-bold text-lg mr-4 print:bg-black print:text-sm print:px-2">
               {number}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 question-header keep-with-next">
               {isDisplayDollar || isDisplayBracket || isWholeLineInline ? (
                 <div className="mt-1">
                   <BlockMath math={text.replace(/^\$\$|\$\$$/g, "").replace(/^\\\\\[|\\\\\]$/g, "").replace(/^\$|\$$/g, "").trim()} />
@@ -112,7 +123,7 @@ const renderRules: RenderRule[] = [
     name: "marks",
     regex: /^\[(\d+)\s*marks?\]$/,
     component: ({ marks }) => (
-      <div className="text-right mt-3 mb-4 print:mt-2 print:mb-3">
+      <div className="text-right mt-3 mb-4 print:mt-2 print:mb-3 avoid-break">
         <div className="inline-flex items-center">
           <span className="text-sm font-bold text-gray-800 border-2 border-gray-800 px-3 py-1 print:text-xs print:px-2 print:border-black">
             [{marks} mark{parseInt(marks) !== 1 ? 's' : ''}]
@@ -126,7 +137,7 @@ const renderRules: RenderRule[] = [
     name: "mcq_option",
     regex: /^([A-D])\.\s*(.+)$/,
     component: ({ letter, text }) => (
-      <div className="ml-8 my-2 flex items-start print:ml-6 print:my-1.5">
+      <div className="ml-8 my-2 flex items-start print:ml-6 print:my-1.5 avoid-break">
         <div className="w-8 h-8 border-2 border-gray-800 rounded-full flex items-center justify-center mr-4 print:w-6 print:h-6 print:mr-3 print:border-black">
           <span className="font-bold text-gray-800 print:text-sm">
             {letter}
@@ -164,7 +175,7 @@ const renderRules: RenderRule[] = [
   },
   {
     name: "answer_box",
-    regex: /^\{answer\}$/,
+    regex: /^\{answer\}\s*$/,
     component: () => (
       <div className="my-4 border-2 border-gray-800 min-h-[100px] p-4 print:border-black print:my-3 print:min-h-[80px]">
         <div className="text-sm font-semibold text-gray-600 mb-2 print:text-xs">
@@ -275,26 +286,29 @@ export function renderProper(input: string): React.ReactNode[] {
     // If no special syntax matched, render as regular text with exam formatting
     if (!matched) {
       // Check if it's a paragraph (longer text) or instruction
+      const hasInlineToken = /\{graph\}|\{working\((.*?)\)\}|\{answer\}/.test(line);
       if (line.length > 60 && !line.match(/^[A-D]\./)) {
         nodes.push(
           <div key={key++} className="text-gray-800 leading-relaxed my-3 text-justify print:my-2 print:text-sm print:leading-relaxed">
-            <p className="indent-4">
-              {processInlineElements(line)}
-            </p>
+            {hasInlineToken ? (
+              <>{processInlineTokens(line)}</>
+            ) : (
+              <p className="indent-4">{processInlineElements(line)}</p>
+            )}
           </div>
         );
       } else if (line.match(/^[ivx]+\)|^\([ivx]+\)|^\d+\.|^\([a-z]\)/i)) {
         // Sub-questions or numbered items
         nodes.push(
           <div key={key++} className="ml-6 text-gray-800 leading-relaxed my-2 print:ml-4 print:my-1.5 print:text-sm">
-            {processInlineElements(line)}
+            {hasInlineToken ? processInlineTokens(line) : processInlineElements(line)}
           </div>
         );
       } else {
         // Regular text or instructions
         nodes.push(
           <div key={key++} className="text-gray-800 leading-relaxed my-2 print:my-1.5 print:text-sm">
-            {processInlineElements(line)}
+            {hasInlineToken ? processInlineTokens(line) : processInlineElements(line)}
           </div>
         );
       }
@@ -358,4 +372,52 @@ function processInlineElements(text: string): React.ReactNode[] {
   }
 
   return nodes.length > 0 ? nodes : [text];
+}
+
+/**
+ * Process inline special tokens within a text line:
+ * - {graph}
+ * - {working(n)} with optional n
+ * - {answer}
+ * Text between tokens still supports inline math via processInlineElements.
+ */
+function processInlineTokens(text: string): React.ReactNode[] {
+  const nodes: React.ReactNode[] = [];
+  let key = 0;
+  const tokenRegex = /(\{graph\}|\{working\((.*?)\)\}|\{answer\})/g;
+  let last = 0;
+  for (const m of text.matchAll(tokenRegex)) {
+    const idx = m.index as number;
+    if (idx > last) {
+      const segment = text.substring(last, idx);
+      nodes.push(...processInlineElements(segment).map((n, i) => <React.Fragment key={key++}>{n}</React.Fragment>));
+    }
+    const token = m[1];
+    if (token.startsWith('{graph')) {
+      nodes.push(
+        <div key={key++} className="my-4 flex justify-center print:my-3">
+          <Graph />
+        </div>
+      );
+    } else if (token.startsWith('{working')) {
+      const n = parseInt((m[2] ?? '').toString(), 10);
+      const linesCount = Number.isFinite(n) ? n : 8;
+      nodes.push(
+        <div key={key++} className="my-3 print:my-2">
+          <Working linesCount={linesCount} />
+        </div>
+      );
+    } else if (token.startsWith('{answer')) {
+      nodes.push(
+        <div key={key++} className="my-3 border-2 border-gray-800 min-h-[100px] p-4 print:border-black print:my-2 print:min-h-[80px]">
+          <div className="text-sm font-semibold text-gray-600 mb-2 print:text-xs">Answer:</div>
+        </div>
+      );
+    }
+    last = idx + token.length;
+  }
+  if (last < text.length) {
+    nodes.push(...processInlineElements(text.substring(last)).map((n, i) => <React.Fragment key={key++}>{n}</React.Fragment>));
+  }
+  return nodes;
 }

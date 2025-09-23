@@ -211,6 +211,10 @@
     .avoid-break { break-inside: avoid; page-break-inside: avoid; }
     .page-break-before { break-before: page; page-break-before: always; }
     .page-break-after { break-after: page; page-break-after: always; }
+    .keep-with-next { break-after: avoid; page-break-after: avoid; }
+
+    /* Keep the first content after question header on the same page */
+    .question-header + * { break-before: avoid; page-break-before: avoid; }
 
     /* Tables look clean and compact */
     table {

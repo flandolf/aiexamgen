@@ -73,15 +73,39 @@ export default function GeneratePage() {
     // Create a new window with the exam content for download
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      // Capture existing stylesheets from current document (Tailwind, globals, etc.)
+      const headStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+        .map((el) => (el as HTMLElement).outerHTML)
+        .join('');
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
           <title>${title || topic} - Exam</title>
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MV4YMBfFfNHLXQWT0nHDFqlQZE3D+WK6l+2qOKR9hbI7QFfYyW0vNQ8m3jW4v7" crossorigin="anonymous">
+          ${headStyles}
           <style>
+            /* Base layout */
             body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-            .no-print { display: none; }
+            /* Tailwind-like helpers used in printed content */
+            .hidden { display: none !important; }
+            .print\\:hidden { display: none !important; }
+            .print\\:block { display: block !important; }
+            .page-break-before { break-before: page; page-break-before: always; }
+            .page-break-after { break-after: page; page-break-after: always; }
+            .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+            .no-print { display: none !important; }
+            /* Print-specific adjustments */
+            @page { margin: 12mm; }
+            html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            @media print {
+              .no-print { display: none !important; }
+              .print\\:hidden { display: none !important; }
+              .print\\:block { display: block !important; }
+              /* Unhide any .hidden only for print if explicitly marked */
+              .hidden.print\\:block { display: block !important; }
+            }
           </style>
         </head>
         <body>
@@ -106,22 +130,12 @@ export default function GeneratePage() {
           </h2>
           <div className="flex space-x-3">
             <Button 
-              variant="outline" 
               size="sm"
               onClick={handlePrint}
               disabled={loading || !!error}
             >
               <Printer className="w-4 h-4 mr-2" />
               Print
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleDownload}
-              disabled={loading || !!error}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download
             </Button>
           </div>
         </div>
@@ -156,12 +170,11 @@ export default function GeneratePage() {
                   totalQuestions={mcq + shortAnswerQuestions}
                   totalMarks={calculateTotalMarks(examOutput)}
                   duration="2 hours"
-                  institution="Educational Institution"
                 />
               </div>
 
               {/* Main Exam Content */}
-              <div className="print:page-break-before">
+              <div className="page-break-before">
                 {/* Exam Header for screen and print */}
                 <div className="print:hidden">
                   <ExamHeader
