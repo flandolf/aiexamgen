@@ -10,7 +10,7 @@ interface WorkingProps {
 export default function Working({
   linesCount = 3,
   lineSpacing = 40,
-  strokeColor = "#e5e7eb",
+  strokeColor = "#374151",
   strokeWidth = 1,
 }: WorkingProps) {
   // Calculate dimensions dynamically
@@ -25,8 +25,10 @@ export default function Working({
   );
 
   return (
-    <div className="my-4 border border-gray-200 rounded-lg p-4 bg-gray-50/30">
-      <div className="text-xs text-gray-500 mb-2 font-medium">Working:</div>
+    <div className="my-4 border-2 border-gray-800 p-4 bg-white print:border-black print:my-3">
+      <div className="text-sm font-semibold text-gray-800 mb-3 print:text-xs print:mb-2">
+        Working Space:
+      </div>
       <svg
         width={width}
         height={height}
@@ -34,7 +36,7 @@ export default function Working({
         preserveAspectRatio="none" // Stretch to fill container
         role="img"
         aria-label={`${linesCount} working lines`}
-        style={{ backgroundColor: "transparent", display: "block" }} // block display for proper sizing
+        style={{ backgroundColor: "transparent", display: "block" }}
       >
         {yPositions.map((y, idx) => (
           <line
@@ -45,9 +47,13 @@ export default function Working({
             y2={y}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
+            strokeDasharray="none"
           />
         ))}
       </svg>
+      <div className="mt-3 text-xs text-gray-500 print:text-[10px] print:mt-2">
+        Show all working clearly. Marks may be awarded for method even if the final answer is incorrect.
+      </div>
     </div>
   );
 }

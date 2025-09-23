@@ -121,36 +121,133 @@
     }
 }
 
-/* Print Styles */
+/* Print styles */
 @media print {
-    .no-print {
-        display: none !important;
+    /* Ensure light theme for print regardless of dark mode */
+    :root, .dark {
+        --background: white !important;
+        --foreground: black !important;
+        --card: white !important;
+        --card-foreground: black !important;
+        --popover: white !important;
+        --popover-foreground: black !important;
+        --primary: black !important;
+        --primary-foreground: white !important;
+        --secondary: oklch(0.95 0 0) !important;
+        --secondary-foreground: black !important;
+        --muted: oklch(0.95 0 0) !important;
+        --muted-foreground: oklch(0.3 0 0) !important;
+        --accent: oklch(0.95 0 0) !important;
+        --accent-foreground: black !important;
+        --destructive: black !important;
+        --border: oklch(0.3 0 0 / 25%) !important;
+        --input: oklch(0.3 0 0 / 25%) !important;
+        --ring: black !important;
+        --sidebar: white !important;
+        --sidebar-foreground: black !important;
+        --sidebar-primary: black !important;
+        --sidebar-primary-foreground: white !important;
+        --sidebar-accent: oklch(0.95 0 0) !important;
+        --sidebar-accent-foreground: black !important;
+        --sidebar-border: oklch(0.3 0 0 / 25%) !important;
+        --sidebar-ring: black !important;
     }
-    
+
+    @page {
+        /* Use generous margins; allow printer to manage page size */
+        margin: 12mm;
+    }
+
+    html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
     body {
         background: white !important;
         color: black !important;
-        font-size: 12pt;
-        line-height: 1.4;
     }
-    
-    .exam-content {
-        font-size: 11pt;
-        line-height: 1.5;
+
+    /* Remove screen-only effects for crisp print */
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        filter: none !important;
     }
-    
-    h1, h2, h3 {
-        page-break-after: avoid;
+
+    /* Hide interactive chrome; use .no-print on any extra elements */
+    .no-print, .print-hidden,
+    button, [role="button"],
+    .actions, .controls,
+    .dropdown, .menu, .toast, .tooltip,
+    .dropzone {
+        display: none !important;
+    }
+
+    /* Make links readable without heavy brand colors */
+    a {
         color: black !important;
+        text-decoration: underline;
     }
-    
-    .question {
+
+    /* Tidy typography on page breaks */
+    p, h1, h2, h3, h4, h5, h6 {
+        orphans: 3;
+        widows: 3;
+    }
+
+    /* Avoid breaking within key blocks */
+    img, svg, canvas, pre, blockquote,
+    table, tr, td, th,
+    .card, .exam-header, .exam-footer, .exam-cover,
+    .question, .section, .graph {
+        break-inside: avoid;
         page-break-inside: avoid;
-        margin-bottom: 20pt;
     }
-    
-    @page {
-        margin: 0.75in;
-        size: A4;
+
+    /* Page-break utility helpers to opt-in from components */
+    .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+    .page-break-before { break-before: page; page-break-before: always; }
+    .page-break-after { break-after: page; page-break-after: always; }
+
+    /* Tables look clean and compact */
+    table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    th, td {
+        border: 1pt solid #000 !important;
+        padding: 6pt !important;
+        vertical-align: top;
+    }
+
+    /* Pre/code should wrap to avoid overflow */
+    pre, code {
+        white-space: pre-wrap !important;
+        word-break: break-word;
+    }
+
+    /* Form controls render as simple, printable boxes */
+    input, select, textarea {
+        background: transparent !important;
+        color: #000 !important;
+        border: 1pt solid #000 !important;
+        box-shadow: none !important;
+    }
+    input[type="checkbox"], input[type="radio"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 12pt; height: 12pt;
+        border: 1pt solid #000 !important;
+        margin: 0 6pt 0 0;
+    }
+    input[type="radio"] { border-radius: 50%; }
+
+    /* Keep headers/footers of exam together and minimal */
+    .exam-header, .exam-footer {
+        background: transparent !important;
+        border: 0 !important;
     }
 }

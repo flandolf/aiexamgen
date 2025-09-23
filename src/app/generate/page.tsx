@@ -7,6 +7,7 @@ import { generateExam, generateTitle } from "@/lib/api/gemini";
 import { Loader2, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ExamHeader from "@/components/exam-header";
+import ExamCover from "@/components/exam-cover";
 
 import "katex/dist/katex.min.css";
 import { renderProper } from "@/components/renderer";
@@ -49,6 +50,19 @@ export default function GeneratePage() {
         setLoading(false);
       });
   }, [topic, apiKey, mcq, shortAnswerQuestions, files, router, model]);
+
+  const calculateTotalMarks = (examText: string): number => {
+    if (!examText) return mcq * 2 + shortAnswerQuestions * 5; // Default estimation
+    
+    const markMatches = examText.match(/\[(\d+)\s*marks?\]/g);
+    if (markMatches) {
+      return markMatches.reduce((total, match) => {
+        const marks = parseInt(match.match(/\d+/)?.[0] || '0');
+        return total + marks;
+      }, 0);
+    }
+    return mcq * 2 + shortAnswerQuestions * 5; // Fallback estimation
+  };
 
   const handlePrint = () => {
     window.print();
@@ -130,16 +144,57 @@ export default function GeneratePage() {
 
           {examOutput && !loading && !error && (
             <>
-              <ExamHeader
-                title={title || "Examination"}
-                topic={topic}
-                mcqCount={mcq}
-                shortAnswerCount={shortAnswerQuestions}
-                totalQuestions={mcq + shortAnswerQuestions}
-              />
-              
-              <div className="exam-content text-base leading-relaxed">
-                {renderProper(examOutput)}
+              {/* Cover Page - Only visible when printing */}
+              <div className="hidden print:block">
+                <ExamCover
+                  title={title || "Examination"}
+                  topic={topic}
+                  mcqCount={mcq}
+                  shortAnswerCount={shortAnswerQuestions}
+                  totalQuestions={mcq + shortAnswerQuestions}
+                  totalMarks={calculateTotalMarks(examOutput)}
+                  duration="2 hours"
+                  institution="Educational Institution"
+                />
+              </div>
+
+              {/* Main Exam Content */}
+              <div className="print:page-break-before">
+                {/* Exam Header for screen and print */}
+                <div className="print:hidden">
+                  <ExamHeader
+                    title={title || "Examination"}
+                    topic={topic}
+                    mcqCount={mcq}
+                    shortAnswerCount={shortAnswerQuestions}
+                    totalQuestions={mcq + shortAnswerQuestions}
+                  />
+                </div>
+
+                {/* Print-only header (simplified) */}
+                <div className="hidden print:block mb-6">
+                  <div className="text-center border-b-2 border-black pb-4 mb-6">
+                    <h1 className="text-xl font-bold mb-2">{title || "Examination"}</h1>
+                    <p className="text-base font-medium">Subject: {topic}</p>
+                    <div className="flex justify-between mt-4 text-sm">
+                      <span>Total Questions: {mcq + shortAnswerQuestions}</span>
+                      <span>Total Marks: {calculateTotalMarks(examOutput)}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Exam Questions */}
+                <div className="exam-content text-base leading-relaxed print:text-sm">
+                  {renderProper(examOutput)}
+                </div>
+
+                {/* End of Exam Footer */}
+                <div className="mt-12 pt-6 border-t-2 border-gray-800 text-center print:mt-8 print:pt-4">
+                  <p className="text-lg font-bold print:text-base">END OF EXAMINATION</p>
+                  <p className="text-sm text-gray-600 mt-2 print:text-xs">
+                    Please check that you have answered all questions before submitting your paper.
+                  </p>
+                </div>
               </div>
             </>
           )}

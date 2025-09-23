@@ -40,32 +40,59 @@ export async function generateExam({
   }
 
   const prompt = `
-  You are an AI exam generator. Create a structured exam on the topic: "${topic}".
+  You are an AI exam generator creating a professional, print-ready examination paper on the topic: "${topic}".
 
-  Requirements:
-  - Generate exactly ${mcq} multiple choice questions (MCQs).
-  - Generate exactly ${shortAnswerQuestions} short answer questions.
+  EXAM STRUCTURE:
+  - Generate exactly ${mcq} multiple choice questions (MCQs) if ${mcq} > 0.
+  - Generate exactly ${shortAnswerQuestions} short answer questions if ${shortAnswerQuestions} > 0.
   - Total questions: ${mcq + shortAnswerQuestions}.
 
-  Question Format:
-  - Start each question with "Question X:" where X is the question number (1, 2, 3, etc.).
-  - For MCQs: Provide 4 options labeled A, B, C, D. Do not mark the correct answer.
-  - For short answer: Ask a question that requires a written response.
+  FORMATTING REQUIREMENTS:
+  ${mcq > 0 && shortAnswerQuestions > 0 ? `
+  1. Start with "SECTION A: Multiple Choice Questions" (if MCQs exist)
+  2. Follow with "SECTION B: Short Answer Questions" (if both types exist)
+  ` : mcq > 0 ? `
+  1. Start with "Multiple Choice Questions"
+  ` : `
+  1. Start with "Short Answer Questions"
+  `}
 
-  Math Formatting:
-  - Use LaTeX for math: inline with $...$, display with $$...$$.
-  - Do not use $ for currency; write amounts in words (e.g., "25 dollars").
+  QUESTION FORMAT:
+  - Each question: "Question X:" where X is the question number (1, 2, 3, etc.).
+  - For MCQs: Provide exactly 4 options labeled A, B, C, D on separate lines.
+  - For short answer: Ask clear, specific questions requiring written responses.
+  - Follow each question with marks in format: [X marks] where X is appropriate for difficulty.
 
-  Marks and Working:
-  - After each question, add [X marks] where X is a positive number based on difficulty.
-  - Then add {working(X)} to show space for working (e.g., {working(4)} for 4 marks).
+  PROFESSIONAL ELEMENTS:
+  - Add {working(X)} after calculation questions where X = number of marks for working space.
+  - Use {graph} if graph sketching or coordinate geometry is required.
+  - Add {answer} for questions requiring boxed final answers.
+  - Include "Instructions: Show all working clearly" before calculation sections.
 
-  Output Rules:
-  - Add a blank line after each question and its marks/working.
-  - No images, diagrams, or graphs.
-  - Use {graph} if sketching is needed.
-  - No explanations, answers, or solutions.
-  - Follow this format exactly for automated processing.
+  MATH FORMATTING:
+  - Use LaTeX notation: $x^2 + 3x - 4 = 0$ for inline math.
+  - Display equations: $$\\frac{dy}{dx} = 2x + 3$$ for complex expressions.
+  - No currency symbols; write "twenty-five dollars" instead of "$25".
+
+  MARK ALLOCATION:
+  - MCQ questions: 1-2 marks each
+  - Short answer: 3-8 marks depending on complexity
+  - Calculation questions: Include method marks
+  - Graph/diagram questions: 4-6 marks
+
+  PROFESSIONAL STANDARDS:
+  - Clear, unambiguous language
+  - Appropriate difficulty for the topic level
+  - Logical progression from easier to harder questions
+  - Real-world applications where relevant
+  - No answer keys or solutions provided
+
+  OUTPUT FORMAT:
+  - Use proper section headers
+  - Leave blank lines between questions
+  - Include mark allocations for every question
+  - Add working space for appropriate questions
+  - End with clear question numbering throughout
   `;
 
   const ai = new GoogleGenAI({
