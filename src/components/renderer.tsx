@@ -11,6 +11,29 @@ interface RenderRule {
 }
 
 const renderRules: RenderRule[] = [
+  // Markdown headings like #, ##, ###
+  {
+    name: "markdown_heading",
+    regex: /^(#{1,6})\s+(.+)$/,
+    component: ({ level, text }) => {
+      const base = "text-gray-900 font-bold tracking-wide";
+      const sizes: Record<number, string> = {
+        1: "text-3xl mb-4 print:text-xl print:mb-3",
+        2: "text-2xl mb-3 print:text-lg print:mb-2.5",
+        3: "text-xl mb-2 print:text-base print:mb-2",
+        4: "text-lg mb-2 print:text-base print:mb-1.5",
+        5: "text-base mb-1.5 print:text-sm print:mb-1.5",
+        6: "text-sm mb-1 print:text-xs print:mb-1",
+      };
+      const cls = `${base} ${sizes[level as number] || sizes[3]}`;
+      return (
+        <div className={cls}>
+          {processInlineElements(text)}
+        </div>
+      );
+    },
+    getProps: (match) => ({ level: match[1].length, text: match[2] }),
+  },
   // Display math delimited by $$...$$ (single-line)
   {
     name: "display_math_dollars",
@@ -36,7 +59,7 @@ const renderRules: RenderRule[] = [
     name: "graph",
     regex: /^\{graph\}\s*$/,
     component: () => (
-      <div className="my-6 flex justify-center print:my-4">
+      <div className="my-6 flex justify-center print:my-4 avoid-break keep-with-prev">
         <Graph />
       </div>
     ),
@@ -46,7 +69,7 @@ const renderRules: RenderRule[] = [
     name: "working",
     regex: /^\{working\(\s*(.*?)\s*\)\}\s*$/,
     component: ({ linesCount }) => (
-      <div className="my-4 print:my-3">
+      <div className="my-4 print:my-3 avoid-break keep-with-prev">
         <Working linesCount={linesCount} />
       </div>
     ),
@@ -123,7 +146,7 @@ const renderRules: RenderRule[] = [
     name: "marks",
     regex: /^\[(\d+)\s*marks?\]$/,
     component: ({ marks }) => (
-      <div className="text-right mt-3 mb-4 print:mt-2 print:mb-3 avoid-break">
+      <div className="text-right mt-3 mb-4 print:mt-2 print:mb-3 avoid-break keep-with-prev">
         <div className="inline-flex items-center">
           <span className="text-sm font-bold text-gray-800 border-2 border-gray-800 px-3 py-1 print:text-xs print:px-2 print:border-black">
             [{marks} mark{parseInt(marks) !== 1 ? 's' : ''}]
@@ -177,10 +200,8 @@ const renderRules: RenderRule[] = [
     name: "answer_box",
     regex: /^\{answer\}\s*$/,
     component: () => (
-      <div className="my-4 border-2 border-gray-800 min-h-[100px] p-4 print:border-black print:my-3 print:min-h-[80px]">
-        <div className="text-sm font-semibold text-gray-600 mb-2 print:text-xs">
-          Answer:
-        </div>
+      <div className="my-4 border-2 border-gray-800 min-h-[100px] p-4 print:border-black print:my-3 print:min-h-[80px] avoid-break keep-with-prev">
+        <div className="text-sm font-semibold text-gray-600 mb-2 print:text-xs">Answer:</div>
         <div className="h-full bg-transparent"></div>
       </div>
     ),
@@ -199,122 +220,181 @@ export function renderProper(input: string): React.ReactNode[] {
 
   const nodes: React.ReactNode[] = [];
   const sanitizedInput = input.replace(/\n{3,}/g, "\n\n");
-  
-  // Split by lines to process each line individually
-  const lines = sanitizedInput.split('\n');
+  const lines = sanitizedInput.split("\n");
   let key = 0;
 
-  // Handle multi-line display math blocks
-  let inDisplay = false;
-  let displayDelimiter: "$$" | "\\[" | null = null;
-  let displayBuffer: string[] = [];
+  // Page-break tracking for sections
+  let sectionCount = 0;
+  let enteredExam = false;
+
+  // Grouping state per question
+  let group: React.ReactNode[] = [];
+  let inQuestion = false;
+
+  const flushGroup = () => {
+    if (inQuestion && group.length > 0) {
+      nodes.push(
+        <div key={key++} className="question-group my-6 print:my-4 avoid-break">
+          {group}
+        </div>
+      );
+    }
+    inQuestion = false;
+    group = [];
+  };
+
+  // Useful rules
+  const questionRule = renderRules.find(r => r.name === "question")!;
+  const sectionRule = renderRules.find(r => r.name === "section_header")!;
+  const mcqRule = renderRules.find(r => r.name === "mcq_option")!;
 
   for (let i = 0; i < lines.length; i++) {
-    const rawLine = lines[i];
-    const line = rawLine.trim();
+    const raw = lines[i];
+    const trimmed = raw.trim();
+    const stripped = trimmed.replace(/^\*\*(.+)\*\*$|^__(.+)__$/,(m,_a,_b)=> (_a||_b||"")).trim() || trimmed;
 
-    // When inside a display math block, accumulate until the closing delimiter
-    if (inDisplay) {
-      if (displayDelimiter === "$$") {
-        if (line.endsWith("$$")) {
-          const content = (displayBuffer.join("\n") + "\n" + rawLine.replace(/\$\$/g, "")).trim();
-          nodes.push(<BlockMath key={key++}>{content}</BlockMath>);
-          inDisplay = false;
-          displayDelimiter = null;
-          displayBuffer = [];
-          continue;
-        }
-      } else if (displayDelimiter === "\\[") {
-        if (line.endsWith("\\]")) {
-          const content = (displayBuffer.join("\n") + "\n" + rawLine.replace(/\\\\\]/, "")).trim();
-          nodes.push(<BlockMath key={key++}>{content}</BlockMath>);
-          inDisplay = false;
-          displayDelimiter = null;
-          displayBuffer = [];
-          continue;
-        }
-      }
-      displayBuffer.push(rawLine);
-      continue;
-    }
-    
-    // Skip empty lines but add appropriate spacing
-    if (!line) {
-      if (i > 0 && i < lines.length - 1) {
-        nodes.push(<div key={key++} className="h-3 print:h-2" />);
-      }
+    if (!trimmed) {
+      // Skip blank lines inside groups; renderer creates spacing
       continue;
     }
 
-    // Start of display math blocks
-    if (line.startsWith("$$")) {
-      if (line.endsWith("$$") && line.length > 3) {
-        const content = line.replace(/^\$\$|\$\$$/g, "").trim();
-        nodes.push(<BlockMath key={key++}>{content}</BlockMath>);
+    // Section header — flush question and add page break before second
+    const sMatch = stripped.match(sectionRule.regex);
+    if (sMatch) {
+      flushGroup();
+      const props = sectionRule.getProps(sMatch as RegExpMatchArray);
+      const Comp = sectionRule.component;
+      const el = <Comp {...props} />;
+      nodes.push(sectionCount >= 1 ? (
+        <div key={key++} className="page-break-before">{el}</div>
+      ) : (
+        <React.Fragment key={key++}>{el}</React.Fragment>
+      ));
+      sectionCount++;
+      enteredExam = true;
+      continue;
+    }
+
+    // New question
+    const qMatch = stripped.match(questionRule.regex);
+    if (qMatch) {
+      flushGroup();
+      const props = questionRule.getProps(qMatch as RegExpMatchArray);
+      const Comp = questionRule.component;
+      group.push(<Comp key={key++} {...props} />);
+      inQuestion = true;
+      enteredExam = true;
+      continue;
+    }
+
+    // MCQ options block
+    const firstOpt = stripped.match(mcqRule.regex);
+    if (firstOpt) {
+      const opts: React.ReactNode[] = [];
+      let j = i;
+      while (j < lines.length) {
+        const r = lines[j].trim();
+        const rb = r.replace(/^\*\*(.+)\*\*$|^__(.+)__$/,(m,_a,_b)=> (_a||_b||"")).trim() || r;
+        const m = rb.match(mcqRule.regex);
+        if (!m) break;
+        const p = mcqRule.getProps(m as RegExpMatchArray);
+        const C = mcqRule.component;
+        opts.push(<C key={`opt-${j}`} {...p} />);
+        j++;
+      }
+      // Skip prompt-error tokens following options
+      while (j < lines.length) {
+        const nxt = lines[j].trim();
+        if (/^\{working\(/i.test(nxt) || /^\{answer\}/i.test(nxt)) { j++; continue; }
+        break;
+      }
+      group.push(
+        <div key={key++} className="ml-4 mt-1 mb-2 print:mt-1 print:mb-2 avoid-break keep-with-prev">
+          {opts}
+        </div>
+      );
+      i = j - 1;
+      continue;
+    }
+
+    // Display math start
+    if (trimmed.startsWith("$$")) {
+      if (trimmed.endsWith("$$") && trimmed.length > 3) {
+        const content = trimmed.replace(/^\$\$|\$\$$/g, "").trim();
+        const node = <BlockMath key={key++}>{content}</BlockMath>;
+        inQuestion ? group.push(node) : nodes.push(node);
       } else {
-        inDisplay = true;
-        displayDelimiter = "$$";
-        displayBuffer = [rawLine.replace(/^\$\$/, "")];
-      }
-      continue;
-    }
-    if (line.startsWith("\\[")) {
-      if (line.endsWith("\\]") && line.length > 3) {
-        const content = line.replace(/^\\\\\[|\\\\\]$/g, "").trim();
-        nodes.push(<BlockMath key={key++}>{content}</BlockMath>);
-      } else {
-        inDisplay = true;
-        displayDelimiter = "\\[";
-        displayBuffer = [rawLine.replace(/^\\\\\[/, "")];
+        // accumulate until closing $$
+        const buf: string[] = [raw.replace(/^\$\$/, "")];
+        i++;
+        while (i < lines.length) {
+          const rr = lines[i];
+          const t = rr.trim();
+          if (t.endsWith("$$")) {
+            buf.push(rr.replace(/\$\$/g, ""));
+            break;
+          }
+          buf.push(rr);
+          i++;
+        }
+        const node = <BlockMath key={key++}>{buf.join("\n").trim()}</BlockMath>;
+        inQuestion ? group.push(node) : nodes.push(node);
       }
       continue;
     }
 
-    // Check if line matches any special syntax
-    let matched = false;
+    // Bracket display math start
+    if (trimmed.startsWith("\\[")) {
+      if (trimmed.endsWith("\\]") && trimmed.length > 3) {
+        const content = trimmed.replace(/^\\\\\[|\\\\\]$/g, "").trim();
+        const node = <BlockMath key={key++}>{content}</BlockMath>;
+        inQuestion ? group.push(node) : nodes.push(node);
+      } else {
+        const buf: string[] = [raw.replace(/^\\\\\[/, "")];
+        i++;
+        while (i < lines.length) {
+          const rr = lines[i];
+          const t = rr.trim();
+          if (t.endsWith("\\]")) {
+            buf.push(rr.replace(/\\\\\]/, ""));
+            break;
+          }
+          buf.push(rr);
+          i++;
+        }
+        const node = <BlockMath key={key++}>{buf.join("\n").trim()}</BlockMath>;
+        inQuestion ? group.push(node) : nodes.push(node);
+      }
+      continue;
+    }
+
+    // Fallback: other rules and paragraphs
+    let handled = false;
     for (const rule of renderRules) {
-      const match = line.match(rule.regex);
-      if (match) {
-        const props = rule.getProps(match);
-        const Component = rule.component;
-        nodes.push(<Component key={key++} {...props} />);
-        matched = true;
+      if (rule.name === "question" || rule.name === "mcq_option" || rule.name === "section_header") continue;
+      const m = stripped.match(rule.regex);
+      if (m) {
+        const props = rule.getProps(m);
+        const Comp = rule.component;
+        const node = <Comp key={key++} {...props} />;
+        inQuestion ? group.push(node) : nodes.push(node);
+        handled = true;
+        enteredExam = true;
         break;
       }
     }
+    if (handled) continue;
 
-    // If no special syntax matched, render as regular text with exam formatting
-    if (!matched) {
-      // Check if it's a paragraph (longer text) or instruction
-      const hasInlineToken = /\{graph\}|\{working\((.*?)\)\}|\{answer\}/.test(line);
-      if (line.length > 60 && !line.match(/^[A-D]\./)) {
-        nodes.push(
-          <div key={key++} className="text-gray-800 leading-relaxed my-3 text-justify print:my-2 print:text-sm print:leading-relaxed">
-            {hasInlineToken ? (
-              <>{processInlineTokens(line)}</>
-            ) : (
-              <p className="indent-4">{processInlineElements(line)}</p>
-            )}
-          </div>
-        );
-      } else if (line.match(/^[ivx]+\)|^\([ivx]+\)|^\d+\.|^\([a-z]\)/i)) {
-        // Sub-questions or numbered items
-        nodes.push(
-          <div key={key++} className="ml-6 text-gray-800 leading-relaxed my-2 print:ml-4 print:my-1.5 print:text-sm">
-            {hasInlineToken ? processInlineTokens(line) : processInlineElements(line)}
-          </div>
-        );
-      } else {
-        // Regular text or instructions
-        nodes.push(
-          <div key={key++} className="text-gray-800 leading-relaxed my-2 print:my-1.5 print:text-sm">
-            {hasInlineToken ? processInlineTokens(line) : processInlineElements(line)}
-          </div>
-        );
-      }
-    }
+    const hasInlineToken = /\{graph\}|\{working\((.*?)\)\}|\{answer\}/.test(trimmed);
+    const textNode = (
+      <div key={key++} className="text-gray-800 leading-relaxed my-2 print:my-1.5 print:text-sm">
+        {hasInlineToken ? processInlineTokens(trimmed) : processInlineElements(trimmed)}
+      </div>
+    );
+    inQuestion ? group.push(textNode) : nodes.push(textNode);
   }
 
+  flushGroup();
   return nodes;
 }
 
@@ -395,7 +475,7 @@ function processInlineTokens(text: string): React.ReactNode[] {
     const token = m[1];
     if (token.startsWith('{graph')) {
       nodes.push(
-        <div key={key++} className="my-4 flex justify-center print:my-3">
+        <div key={key++} className="my-4 flex justify-center print:my-3 avoid-break keep-with-prev">
           <Graph />
         </div>
       );
@@ -403,13 +483,13 @@ function processInlineTokens(text: string): React.ReactNode[] {
       const n = parseInt((m[2] ?? '').toString(), 10);
       const linesCount = Number.isFinite(n) ? n : 8;
       nodes.push(
-        <div key={key++} className="my-3 print:my-2">
+        <div key={key++} className="my-3 print:my-2 avoid-break keep-with-prev">
           <Working linesCount={linesCount} />
         </div>
       );
     } else if (token.startsWith('{answer')) {
       nodes.push(
-        <div key={key++} className="my-3 border-2 border-gray-800 min-h-[100px] p-4 print:border-black print:my-2 print:min-h-[80px]">
+        <div key={key++} className="my-3 border-2 border-gray-800 min-h-[100px] p-4 print:border-black print:my-2 print:min-h-[80px] avoid-break keep-with-prev">
           <div className="text-sm font-semibold text-gray-600 mb-2 print:text-xs">Answer:</div>
         </div>
       );

@@ -166,6 +166,9 @@
     body {
         background: white !important;
         color: black !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-kerning: normal;
     }
 
     /* Remove screen-only effects for crisp print */
@@ -186,6 +189,9 @@
         display: none !important;
     }
 
+    /* Ensure explicit print:block wins when paired with hidden */
+    .hidden.print\:block { display: block !important; }
+
     /* Make links readable without heavy brand colors */
     a {
         color: black !important;
@@ -196,6 +202,11 @@
     p, h1, h2, h3, h4, h5, h6 {
         orphans: 3;
         widows: 3;
+    }
+
+    h1, h2, h3 {
+        break-after: avoid-page;
+        page-break-after: avoid;
     }
 
     /* Avoid breaking within key blocks */
@@ -212,6 +223,7 @@
     .page-break-before { break-before: page; page-break-before: always; }
     .page-break-after { break-after: page; page-break-after: always; }
     .keep-with-next { break-after: avoid; page-break-after: avoid; }
+    .keep-with-prev { break-before: avoid; page-break-before: avoid; }
 
     /* Keep the first content after question header on the same page */
     .question-header + * { break-before: avoid; page-break-before: avoid; }
@@ -254,4 +266,8 @@
         background: transparent !important;
         border: 0 !important;
     }
+
+    /* KaTeX colors to solid black for print clarity */
+    .katex, .katex * { color: #000 !important; }
+    .katex-display { margin: 10pt 0 !important; }
 }

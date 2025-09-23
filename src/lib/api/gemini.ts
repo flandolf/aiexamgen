@@ -42,57 +42,58 @@ export async function generateExam({
   const prompt = `
   You are an AI exam generator creating a professional, print-ready examination paper on the topic: "${topic}".
 
+  IMPORTANT OUTPUT CONTRACT (strict):
+  - Output plain text only. Do NOT use Markdown headings (#, ##), bold (**), or italics (*). No titles, prefaces, or extra commentary.
+  - Use the exact section header lines specified below. No extra punctuation or styling.
+  - Follow the exact line structure for questions, options, marks, and tokens as described.
+  - Do NOT include any debug lines, metadata, or trailing markers (e.g., "debug:", "examOutput ^").
+
   EXAM STRUCTURE:
   - Generate exactly ${mcq} multiple choice questions (MCQs) if ${mcq} > 0.
   - Generate exactly ${shortAnswerQuestions} short answer questions if ${shortAnswerQuestions} > 0.
   - Total questions: ${mcq + shortAnswerQuestions}.
 
-  FORMATTING REQUIREMENTS:
+  SECTION HEADERS:
   ${mcq > 0 && shortAnswerQuestions > 0 ? `
-  1. Start with "SECTION A: Multiple Choice Questions" (if MCQs exist)
-  2. Follow with "SECTION B: Short Answer Questions" (if both types exist)
+  1) First print this line exactly: SECTION A: Multiple Choice Questions
+  2) After all MCQs, print this line exactly: SECTION B: Short Answer Questions
   ` : mcq > 0 ? `
-  1. Start with "Multiple Choice Questions"
+  1) Print this line exactly: Multiple Choice Questions
   ` : `
-  1. Start with "Short Answer Questions"
+  1) Print this line exactly: Short Answer Questions
   `}
 
-  QUESTION FORMAT:
-  - Each question: "Question X:" where X is the question number (1, 2, 3, etc.).
-  - For MCQs: Provide exactly 4 options labeled A, B, C, D on separate lines.
-  - For short answer: Ask clear, specific questions requiring written responses.
-  - Follow each question with marks in format: [X marks] where X is appropriate for difficulty.
+  QUESTION FORMAT (all questions):
+  - First line: "Question X:" where X is 1, 2, 3, ...
+  - For MCQs:
+    • Next 4 lines are the choices on separate lines labeled exactly: "A. ", "B. ", "C. ", "D. ".
+    • Then add one line with marks in the format: "[N marks]" (use singular "mark" if N=1). No {working} or {answer} in MCQs.
+  - For short answer:
+    • Ask a clear, specific question. If graphing is required, include a line with "{graph}".
+    • For calculation questions, include a line with "{working(K)}" (K = a reasonable number of working lines for the marks).
+    • If a boxed final answer is appropriate, include a line with "{answer}".
+    • Then add one line with marks in the format: "[N marks]" (use singular "mark" if N=1).
+  - Insert exactly one blank line between questions (i.e., leave one empty line after the marks/tokens).
 
   PROFESSIONAL ELEMENTS:
-  - Add {working(X)} after calculation questions where X = number of marks for working space.
-  - Use {graph} if graph sketching or coordinate geometry is required.
-  - Add {answer} for questions requiring boxed final answers.
-  - Include "Instructions: Show all working clearly" before calculation sections.
+  - Include the line "Instructions: Show all working clearly" exactly once at the beginning of the short answer section (if it exists). Do not place instructions at the very start of the document.
+  - Use {graph} only when needed (graph sketching or coordinate geometry).
+  - Use {working(K)} only for calculation-style short answers; never include it for MCQs.
+  - Use {answer} for short answers requiring a final boxed value.
 
   MATH FORMATTING:
-  - Use LaTeX notation: $x^2 + 3x - 4 = 0$ for inline math.
-  - Display equations: $$\\frac{dy}{dx} = 2x + 3$$ for complex expressions.
-  - No currency symbols; write "twenty-five dollars" instead of "$25".
+  - Inline math: $x^2 + 3x - 4 = 0$
+  - Display equations on their own line using: $$\\frac{dy}{dx} = 2x + 3$$
+  - Do not use code blocks. No currency symbols; write "twenty-five dollars" instead of "$25".
 
-  MARK ALLOCATION:
-  - MCQ questions: 1-2 marks each
-  - Short answer: 3-8 marks depending on complexity
-  - Calculation questions: Include method marks
-  - Graph/diagram questions: 4-6 marks
+  MARK ALLOCATION GUIDANCE:
+  - MCQ: 1–2 marks each
+  - Short answer: 3–8 marks depending on complexity (include method marks)
+  - Graph/diagram questions: 4–6 marks
 
-  PROFESSIONAL STANDARDS:
-  - Clear, unambiguous language
-  - Appropriate difficulty for the topic level
-  - Logical progression from easier to harder questions
-  - Real-world applications where relevant
-  - No answer keys or solutions provided
-
-  OUTPUT FORMAT:
-  - Use proper section headers
-  - Leave blank lines between questions
-  - Include mark allocations for every question
-  - Add working space for appropriate questions
-  - End with clear question numbering throughout
+  STYLE AND QUALITY:
+  - Clear, unambiguous language; logical progression from easier to harder; relevant real-world contexts where appropriate.
+  - No answer keys, no solutions.
   `;
 
   const ai = new GoogleGenAI({
