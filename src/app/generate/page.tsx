@@ -4,11 +4,12 @@ import { useExamStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { generateExam, generateTitle } from "@/lib/api/gemini";
-import { Loader2, Download, Printer } from "lucide-react";
+import { AlertCircle, Check, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ExamHeader from "@/components/exam-header";
 import ExamCover from "@/components/exam-cover";
 
+// @ts-ignore: side-effect import of CSS without type declarations
 import "katex/dist/katex.min.css";
 import { renderProper } from "@/components/renderer";
 
@@ -69,72 +70,48 @@ export default function GeneratePage() {
     window.print();
   };
 
-  const handleDownload = () => {
-    // Create a new window with the exam content for download
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      // Capture existing stylesheets from current document (Tailwind, globals, etc.)
-      const headStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-        .map((el) => (el as HTMLElement).outerHTML)
-        .join('');
-
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>${title || topic} - Exam</title>
-          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MV4YMBfFfNHLXQWT0nHDFqlQZE3D+WK6l+2qOKR9hbI7QFfYyW0vNQ8m3jW4v7" crossorigin="anonymous">
-          ${headStyles}
-          <style>
-            /* Base layout */
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-            /* Tailwind-like helpers used in printed content */
-            .hidden { display: none !important; }
-            .print\\:hidden { display: none !important; }
-            .print\\:block { display: block !important; }
-            .page-break-before { break-before: page; page-break-before: always; }
-            .page-break-after { break-after: page; page-break-after: always; }
-            .avoid-break { break-inside: avoid; page-break-inside: avoid; }
-            .no-print { display: none !important; }
-            /* Print-specific adjustments */
-            @page { margin: 12mm; }
-            html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            @media print {
-              .no-print { display: none !important; }
-              .print\\:hidden { display: none !important; }
-              .print\\:block { display: block !important; }
-              /* Unhide any .hidden only for print if explicitly marked */
-              .hidden.print\\:block { display: block !important; }
-            }
-          </style>
-        </head>
-        <body>
-          ${document.getElementById('exam-content')?.innerHTML || ''}
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
-
   if (!topic || !apiKey) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Action Bar - Hide on print */}
-      <div className="no-print sticky top-0 bg-white border-b shadow-sm z-10 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {title ? `${title} - ${topic}` : topic}
-          </h2>
-          <div className="flex space-x-3">
-            <Button 
+      <div className="no-print sticky top-0 z-20 border-b border-border/60 bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.32em] text-muted-foreground">
+              Exam Generator 
+            </span>
+            <h2 className="text-lg font-semibold text-foreground">
+              {title ? `${title} - ${topic}` : topic}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground">
+              {loading ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                  Generating
+                </>
+              ) : error ? (
+                <>
+                  <AlertCircle className="h-3 w-3 text-destructive" />
+                  Issue detected
+                </>
+              ) : (
+                <>
+                  <Check className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
+                  Ready to print
+                </>
+              )}
+            </span>
+            <Button
               size="sm"
+              variant="secondary"
+              className="gap-2"
               onClick={handlePrint}
               disabled={loading || !!error}
             >
-              <Printer className="w-4 h-4 mr-2" />
+              <Printer className="h-4 w-4" />
               Print
             </Button>
           </div>

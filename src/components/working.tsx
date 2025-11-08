@@ -26,9 +26,6 @@ export default function Working({
 
   return (
     <div className="my-4 border-2 border-gray-800 p-4 bg-white print:border-black print:my-3">
-      <div className="text-sm font-semibold text-gray-800 mb-3 print:text-xs print:mb-2">
-        Working Space:
-      </div>
       <svg
         width={width}
         height={height}
@@ -51,9 +48,6 @@ export default function Working({
           />
         ))}
       </svg>
-      <div className="mt-3 text-xs text-gray-500 print:text-[10px] print:mt-2">
-        Show all working clearly. Marks may be awarded for method even if the final answer is incorrect.
-      </div>
     </div>
   );
 }

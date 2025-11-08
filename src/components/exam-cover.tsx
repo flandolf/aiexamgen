@@ -27,108 +27,104 @@ export default function ExamCover({
 
   // Calculate estimated total marks if not provided
   const estimatedMarks = totalMarks || (mcqCount * 2 + shortAnswerCount * 5);
+  const sectionsLabel = mcqCount > 0 && shortAnswerCount > 0 ? "two sections" : "a single section";
 
   return (
-    <div className="exam-cover bg-white p-8 print:p-6 flex flex-col justify-between print:text-sm page-break-after avoid-break">
-      {/* Header */}
-      <div>
-        <div className="text-center border-b-4 border-gray-800 pb-6 mb-8 print:pb-4 print:mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2 print:text-lg">
-            EXAMINATION
-          </h2>
-          <h3 className="text-xl font-medium text-gray-700 print:text-base">
-            {title}
-          </h3>
-        </div>
+    <div className="exam-cover relative flex flex-col gap-8 rounded-3xl border border-border bg-card p-8 text-card-foreground shadow-sm print:gap-4 print:rounded-none print:border-0 print:bg-white print:p-5 print:text-sm print:text-black">
+      <div
+        className="pointer-events-none absolute inset-0 rounded-[inherit] bg-gradient-to-br from-primary/15 via-transparent to-transparent opacity-70 dark:from-primary/10 print:hidden"
+        aria-hidden="true"
+      />
 
-        {/* Exam Details Box */}
-  <div className="border-2 border-gray-800 p-6 mb-8 print:p-4 print:mb-6 avoid-break">
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div className="flex justify-between border-b border-gray-300 pb-2">
-                <span className="font-semibold">Subject:</span>
-                <span className="font-medium">{topic}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-300 pb-2">
-                <span className="font-semibold">Date:</span>
-                <span>{currentDate}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-300 pb-2">
-                <span className="font-semibold">Duration:</span>
-                <span>{duration}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-300 pb-2">
-                <span className="font-semibold">Total Questions:</span>
-                <span>{totalQuestions}</span>
-              </div>
+      <div className="relative flex flex-col gap-8">
+        {/* Header */}
+        <header className="text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
+            Exam Day Brief
+          </p>
+          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl print:text-2xl">
+            {title}
+          </h2>
+          <p className="text-base text-muted-foreground">
+            {topic} | {currentDate}
+          </p>
+        </header>
+
+    {/* Exam Details Box */}
+    <section className="rounded-2xl border border-border/70 bg-muted/40 p-6 print:rounded-xl print:border-2 print:border-gray-800 print:bg-transparent print:p-4">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-3 text-sm print:space-y-2">
+              <p>
+                <span className="font-semibold text-card-foreground">Duration:</span> {duration}
+              </p>
+              <p>
+                <span className="font-semibold text-card-foreground">Total Questions:</span> {totalQuestions}
+              </p>
+              <p>
+                <span className="font-semibold text-card-foreground">Question Breakdown:</span>
+              </p>
+              <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+                {mcqCount > 0 && <li>{mcqCount} multiple choice</li>}
+                {shortAnswerCount > 0 && <li>{shortAnswerCount} short answer</li>}
+              </ul>
             </div>
-            <div className="space-y-4">
-              <div className="flex justify-between border-b border-gray-300 pb-2">
-                <span className="font-semibold">Multiple Choice:</span>
-                <span>{mcqCount} questions</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-300 pb-2">
-                <span className="font-semibold">Short Answer:</span>
-                <span>{shortAnswerCount} questions</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-300 pb-2">
-                <span className="font-semibold">Total Marks:</span>
-                <span className="font-bold text-lg">{estimatedMarks}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-300 pb-2">
-                <span className="font-semibold">Pass Mark:</span>
-                <span>{Math.ceil(estimatedMarks * 0.5)}</span>
-              </div>
+            <div className="space-y-3 text-sm print:space-y-2">
+              <p>
+                <span className="font-semibold text-card-foreground">Estimated Marks:</span> {estimatedMarks}
+              </p>
+              <p>
+                <span className="font-semibold text-card-foreground">Pass Target:</span> {Math.ceil(estimatedMarks * 0.5)} marks
+              </p>
+              <p>
+                <span className="font-semibold text-card-foreground">You'll Explore:</span> {sectionsLabel}
+              </p>
+              <p className="rounded-xl border border-dashed border-border/60 bg-background/80 px-4 py-2 text-xs text-muted-foreground print:px-3 print:py-1.5 print:text-[11px] print:border-0 print:bg-transparent">
+                Settle in, take a breath, and show what you know.
+              </p>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Student Information */}
-        <div className="border-2 border-gray-800 p-6 mb-8 print:p-4 print:mb-6 avoid-break">
-          <h3 className="text-lg font-bold mb-4 text-center print:text-base print:mb-3">CANDIDATE INFORMATION</h3>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <span className="font-semibold w-32">Name:</span>
-              <div className="flex-1 border-b-2 border-gray-800 h-8"></div>
+        <section className="rounded-2xl border border-border/70 bg-background/60 p-6 print:rounded-xl print:border-2 print:border-gray-800 print:bg-transparent print:p-4">
+          <h3 className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+            Candidate Details
+          </h3>
+          <div className="space-y-4 text-sm print:space-y-3">
+            <div className="flex items-center gap-4">
+              <span className="w-32 font-medium text-card-foreground print:w-28">Name</span>
+              <span className="flex-1 border-b border-dashed border-border/70 text-muted-foreground print:min-h-[18px]">Please print clearly</span>
             </div>
-            <div className="flex items-center">
-              <span className="font-semibold w-32">Student ID:</span>
-              <div className="flex-1 border-b-2 border-gray-800 h-8"></div>
+            <div className="flex items-center gap-4">
+              <span className="w-32 font-medium text-card-foreground print:w-28">Student ID</span>
+              <span className="flex-1 border-b border-dashed border-border/70 text-muted-foreground print:min-h-[18px]">Numbers only</span>
             </div>
-            <div className="flex items-center">
-              <span className="font-semibold w-32">Signature:</span>
-              <div className="flex-1 border-b-2 border-gray-800 h-8"></div>
+            <div className="flex items-center gap-4">
+              <span className="w-32 font-medium text-card-foreground print:w-28">Signature</span>
+              <span className="flex-1 border-b border-dashed border-border/70 text-muted-foreground print:min-h-[18px]">Sign when ready</span>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Instructions */}
-        <div className="border-2 border-gray-800 p-6 print:p-4 avoid-break">
-          <h3 className="text-lg font-bold mb-4 text-center print:text-base print:mb-3">INSTRUCTIONS TO CANDIDATES</h3>
-          <div className="space-y-3 text-sm">
-            <div className="grid grid-cols-1 gap-3">
-              <p><strong>1.</strong> Write your name and student ID clearly in the spaces provided above.</p>
-              <p><strong>2.</strong> This examination consists of {totalQuestions} questions in {mcqCount > 0 && shortAnswerCount > 0 ? 'two' : 'one'} section{mcqCount > 0 && shortAnswerCount > 0 ? 's' : ''}:</p>
-              {mcqCount > 0 && (
-                <p className="ml-6">• Section A: {mcqCount} Multiple Choice Questions</p>
-              )}
-              {shortAnswerCount > 0 && (
-                <p className="ml-6">• Section B: {shortAnswerCount} Short Answer Questions</p>
-              )}
-              <p><strong>3.</strong> Answer ALL questions in the spaces provided.</p>
-              <p><strong>4.</strong> For multiple choice questions, circle the letter of your chosen answer.</p>
-              <p><strong>5.</strong> Show all working for calculation questions in the designated areas.</p>
-              <p><strong>6.</strong> Use only black or blue pen. Pencil may be used for diagrams only.</p>
-              <p><strong>7.</strong> Calculators {Math.random() > 0.5 ? 'are' : 'are not'} permitted for this examination.</p>
-              <p><strong>8.</strong> Mobile phones and other electronic devices must be switched off.</p>
-              <p><strong>9.</strong> No materials may be taken from the examination room.</p>
-              <p><strong>10.</strong> Remain seated until instructed to leave.</p>
-            </div>
-          </div>
-        </div>
+        <section className="rounded-2xl border border-border/70 bg-muted/40 p-6 print:rounded-xl print:border-2 print:border-gray-800 print:bg-transparent print:p-4">
+          <h3 className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+            Friendly Reminders
+          </h3>
+          <ul className="space-y-3 text-sm leading-relaxed text-muted-foreground print:space-y-2">
+            <li>Write your name and student ID above so we can celebrate your success.</li>
+            <li>This exam includes {totalQuestions} questions across {sectionsLabel}. Take them one at a time.</li>
+            <li>Circle MCQ answers neatly and use the provided space for short responses.</li>
+            <li>Bring your best explanations and show your working where it helps tell your story.</li>
+            <li>Keep devices tucked away and enjoy a quiet focus zone.</li>
+            <li>Need a calculator? Yes, it is welcome today.</li>
+            <li>When you finish, give your paper a quick check before handing it in.</li>
+          </ul>
+          <p className="mt-6 rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-3 text-center text-sm font-medium text-card-foreground print:mt-4 print:px-3 print:py-2 print:text-xs print:border-0 print:bg-transparent">
+            You have prepared for this. Deep breath, steady pace, you've got this!
+          </p>
+        </section>
       </div>
-
-      {/* No footer branding on print */}
     </div>
   );
 }
